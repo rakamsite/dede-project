@@ -1,0 +1,19 @@
+{
+    "name": "erfun/de-de-v2",
+    "description": "dede version tow of development process",
+    "autoload": {
+        "files": ["src/dede_v2_run_plugin.php"],
+        "classmap": ["src/classes"],
+        "external" : ["../persian-woocommerce-sms/src/Helper.php"]
+    },
+    "authors": [
+        {
+            "name": "erfun",
+            "email": "erfunmnjdwork@gmail.com"
+        }
+    ],
+    "require": {
+        "cmb2/cmb2": "^2.11",
+        "morilog/jalali": "3.*"
+    }
+}

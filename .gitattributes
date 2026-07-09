@@ -1,0 +1,13 @@
+# Normalize text files in Git
+* text=auto
+
+# Keep common binary files binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.xlsx binary
+*.zip binary
+*.sql binary

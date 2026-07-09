@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "tw": "npx tailwindcss -i ./assets/css/tailwind.css -o ./assets/css/story.css --watch",
+    "browsersync": "browser-sync start --config bs-config.js"
+
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.16"
+  },
+  "dependencies": {
+    "@fancyapps/ui": "^5.0.36"
+  }
+}

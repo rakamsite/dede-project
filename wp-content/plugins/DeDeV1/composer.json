@@ -1,0 +1,27 @@
+{
+    "name": "erfun/de-de-v1",
+    "autoload": {
+        "files": ["src/dede_dev_run_plugin.php"],
+        "classmap": ["src/classes"]
+    },
+    "authors": [
+        {
+            "name": "erfun",
+            "email": "erfunmnjdwork@gmail.com"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "^2.0",
+        "phpoffice/phpword": "^1.2",
+        "phpdocumentor/phpdocumentor": "^2.9",
+        "react/event-loop": "^1.5",
+        "react/promise": "^3.1",
+        "mpdf/mpdf": "^8.2"
+    },
+    "config": {
+        "optimize-autoloader": true
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.10"
+    }
+}

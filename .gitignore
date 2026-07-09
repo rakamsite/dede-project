@@ -1,0 +1,89 @@
+# WordPress core
+/wp-admin/
+/wp-includes/
+/wp-*.php
+/xmlrpc.php
+/index.php
+/license.txt
+/readme.html
+/.htaccess
+/wp-config.php
+/wp-config-*.php
+
+# Root junk / server files
+/.ftpquota
+/*.sql
+/*.log
+/*.zip
+/*.rar
+/*.tar
+/*.gz
+/*.bak
+/*.backup
+/error_log
+/debug.log
+/cron_errors*.log
+/google*.html
+/77343832.txt
+/i.php
+/time.php
+
+# WordPress generated content
+/wp-content/uploads/
+/wp-content/uploads-old/
+/wp-content/cache/
+/wp-content/upgrade/
+/wp-content/upgrade-temp-backup/
+/wp-content/upgrade-temp-backup-old/
+/wp-content/wflogs/
+/wp-content/litespeed/
+/wp-content/languages/
+/wp-content/languages-old/
+/wp-content/maintenance/
+/wp-content/wp-rocket-config-old/
+/wp-content/debug.log
+
+# Ignore all themes/plugins by default
+/wp-content/themes/*
+/wp-content/plugins/*
+
+# Allow only DeDe project theme/plugins
+!/wp-content/themes/DeDeTemPlate/
+!/wp-content/themes/DeDeTemPlate/**
+
+!/wp-content/plugins/DeDeV1/
+!/wp-content/plugins/DeDeV1/**
+
+!/wp-content/plugins/DeDeV2/
+!/wp-content/plugins/DeDeV2/**
+
+# Future clean DeDe plugins
+!/wp-content/plugins/dede-core/
+!/wp-content/plugins/dede-core/**
+
+!/wp-content/plugins/dede-product-operations/
+!/wp-content/plugins/dede-product-operations/**
+
+!/wp-content/plugins/dede-store-features/
+!/wp-content/plugins/dede-store-features/**
+
+# Dependencies / generated folders
+**/node_modules/
+**/vendor/
+**/.git/
+**/.svn/
+**/.hg/
+**/.idea/
+**/.vscode/
+**/.DS_Store
+**/Thumbs.db
+
+# Temporary files
+**/*.log
+**/*.tmp
+**/*.temp
+**/*.bak
+**/*.backup
+**/*.zip~
+**/import-log.txt
+# DeDe extra cleanup before initial commit

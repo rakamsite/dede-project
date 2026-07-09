@@ -1,0 +1,2 @@
+<div class="fixed md:top-1/2 top-0 md:left-1/2 md:transform md:-translate-y-1/2 md:-translate-x-1/2 z-[99999] p-4 md:w-max md:min-w-[800px] w-full transition-all h-full lg:h-5/6 overflow-y-auto lg:min-h-[500px] bg-gray-50 text-black flex flex-col-reverse lg:p-10 rounded-lg hidden"
+     id="quick_view_container"></div>

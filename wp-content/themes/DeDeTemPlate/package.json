@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "@fancyapps/ui": "^5.0.20",
+    "browsersync": "^0.0.1-security",
+    "flowbite": "^1.7.0",
+    "jalali-moment": "^3.3.11",
+    "lightbox2": "^2.11.4",
+    "magnific-popup": "^1.1.0",
+    "persian-datepicker": "^1.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@tailwindcss/forms": "^0.5.4",
+    "@tailwindcss/typography": "^0.5.10",
+    "@webpack-cli/generators": "^3.0.7",
+    "babel-loader": "^9.2.1",
+    "flowbite-typography": "^1.0.3",
+    "prettier": "^3.4.2",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "tw": "npx tailwindcss -i ./assets/css/input.css -o ./assets/css/style.css --watch",
+    "twemail": "npx tailwindcss -i ./assets/css/inputEmail.css -o ./assets/css/EmailStyle.css --watch",
+    "browsersync": "browser-sync start --config bs-config.js"
+  },
+  "version": "1.0.0",
+  "description": "My webpack project",
+  "name": "my-webpack-project"
+}

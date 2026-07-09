@@ -1,0 +1,46 @@
+.dg-flex {
+  display: flex
+}
+
+.dg-w-full {
+  width: 100%
+}
+
+.dg-items-center {
+  align-items: center
+}
+
+.dg-justify-center {
+  justify-content: center
+}
+
+.dg-divide-x > :not([hidden]) ~ :not([hidden]) {
+  --tw-divide-x-reverse: 0;
+  border-right-width: calc(1px * var(--tw-divide-x-reverse));
+  border-left-width: calc(1px * calc(1 - var(--tw-divide-x-reverse)))
+}
+
+.dg-rounded {
+  border-radius: 0.25rem
+}
+
+.dg-p-5 {
+  padding: 1.25rem
+}
+
+.dg-text-center {
+  text-align: center
+}
+
+.dg-text-right {
+  text-align: right
+}
+
+.dg-text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem
+}
+
+.dg-font-bold {
+  font-weight: 700
+}
