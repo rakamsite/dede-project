@@ -1,15 +1,30 @@
-# DeDe Project
+# پروژه DeDe
 
-This repository tracks only the custom DeDe development surface:
+این مخزن برای مدیریت و پیگیری قالب و افزونه‌های اختصاصی DeDe در WordPress/WooCommerce استفاده می‌شود.
+
+## محدوده پروژه
 
 - `wp-content/themes/DeDeTemPlate`
 - `wp-content/plugins/DeDeV1`
 - `wp-content/plugins/DeDeV2`
-- future plugins:
-  - `wp-content/plugins/dede-core`
-  - `wp-content/plugins/dede-product-operations`
-  - `wp-content/plugins/dede-store-features`
 - `docs/`
 - `tools/`
 
-WordPress core, uploads, caches, logs, SQL backups and `wp-config.php` are intentionally ignored.
+فایل‌های هسته WordPress، پوشه `uploads`، کش، لاگ‌ها، بکاپ‌ها، `node_modules`، `vendor` و فایل‌های نامرتبط جزو Git این پروژه نیستند.
+
+# گزارش انجام کار
+
+## فاز 0 — آماده‌سازی Git و ساختار پروژه
+
+### هدف / اثر این فاز
+
+این فاز پروژه را از تغییرات پراکنده و ثبت‌نشده به یک روند کنترل‌شده مبتنی بر Git منتقل کرد تا تغییرات بعدی قابل پیگیری، قابل بررسی، امن‌تر و مناسب‌تر برای ثبت گزارش کاری باشند.
+
+### موارد انجام‌شده
+
+0.1. محدوده فایل‌های اختصاصی پروژه مشخص شد.  
+0.2. قالب `DeDeTemPlate` به‌عنوان قالب اصلی پروژه در ساختار Git قرار گرفت.  
+0.3. افزونه‌های اختصاصی `DeDeV1` و `DeDeV2` به‌عنوان محدوده اصلی توسعه مشخص شدند.  
+0.4. فایل‌ها و پوشه‌های غیرضروری مثل آپلودها، کش، لاگ‌ها، بکاپ‌ها، `node_modules` و فایل‌های حجیم از محدوده Git و خروجی بررسی کنار گذاشته شدند.  
+0.5. ساختار اولیه پوشه‌های `docs` و `tools` برای نگهداری مستندات داخلی و ابزارهای پروژه آماده شد.  
+0.6. مسیر خروجی‌گیری تمیز از پروژه برای بررسی مرحله‌ای قالب، افزونه‌ها و مستندات آماده شد.  
