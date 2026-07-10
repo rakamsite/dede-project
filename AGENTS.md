@@ -8,6 +8,7 @@
 2. سپس فایل‌های واقعی مرتبط با همان تسک را بررسی کن.
 3. اگر دستور کاربر با `PROJECT-MASTER.md` تعارض داشت، آخرین دستور صریح کاربر مقدم است و همان تغییر باید در `PROJECT-MASTER.md` ثبت شود.
 4. اسناد داخل `docs/archive/` یا `tools/archive/` فقط تاریخی‌اند و مرجع جاری نیستند.
+5. این آرشیوها باید در Git باقی بمانند؛ فقط فایل‌های فشرده، بکاپ و خروجی‌های generated خارج از Git هستند.
 
 ## 2. محدوده تغییر
 
@@ -33,7 +34,8 @@
   - `dede-core`
   - `dede-product-operations`
   - `dede-store-features`
-- قالب هدف آینده: `dede-theme`
+  - قالب هدف آینده: `dede-theme`
+- هر component جدید با نام `dede-*` باید در Git قابل track باشد و root آن به `tools/cpanel-deploy-allowlist.txt` اضافه شود.
 - مالکیت دقیق هر قابلیت در `docs/PROJECT-MASTER.md` تعریف شده است.
 - منطق تجاری جدید را داخل قالب قرار نده، مگر `PROJECT-MASTER.md` صریحاً آن را متعلق به قالب بداند.
 

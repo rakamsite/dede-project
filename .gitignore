@@ -51,6 +51,11 @@
 !/wp-content/themes/DeDeTemPlate/
 !/wp-content/themes/DeDeTemPlate/**
 
+!/wp-content/themes/dede-theme/
+!/wp-content/themes/dede-theme/**
+!/wp-content/themes/dede-*/
+!/wp-content/themes/dede-*/**
+
 !/wp-content/plugins/DeDeV1/
 !/wp-content/plugins/DeDeV1/**
 
@@ -58,6 +63,9 @@
 !/wp-content/plugins/DeDeV2/**
 
 # Future clean DeDe plugins
+!/wp-content/plugins/dede-*/
+!/wp-content/plugins/dede-*/**
+
 !/wp-content/plugins/dede-core/
 !/wp-content/plugins/dede-core/**
 
