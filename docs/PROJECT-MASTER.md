@@ -64,6 +64,8 @@
 - `tools/`
 - `.cpanel.yml`
 - قالب و افزونه‌های اختصاصی تاییدشده در allowlist
+- componentهای جدید با نام `dede-*`
+- `docs/archive/` و `tools/archive/` به‌عنوان اسناد تاریخی تحت Git
 
 ### خارج از Git
 
@@ -73,7 +75,7 @@
 - افزونه‌های عمومی، تجاری و محیطی
 - cache، logs، backups، temp
 - `.git`های تو در تو
-- archiveهای قدیمی
+- archiveهای فشرده و بکاپ مثل `zip`، `rar`، `tar` و `backup`
 - `node_modules`
 - dependencyهای build یا generated غیرضروری
 
@@ -249,6 +251,7 @@
 - GitHub و cPanel Git راه‌اندازی شده‌اند.
 - مسیر repo و live مشخص شده‌اند.
 - deploy مستقیم روی `dede.ir` فعال است.
+- deploy cPanel از مسیرهای hardcode به allowlist معتبر منتقل شده است.
 - فاز 1-A انجام و deploy شده است:
   - حذف load دستی WordPress/WooCommerce از قالب
   - safe require برای فایل‌های داخلی
@@ -259,8 +262,11 @@
 
 ### کار جاری
 
-- تبدیل مسیرهای hardcode deploy به allowlist معتبر.
-- پس از آن، ادامه فاز 1 و ساخت اسکلت اولیه `dede-core`.
+- یکپارچه‌سازی قوانین و مستندات.
+
+### قدم بعدی
+
+- ساخت اسکلت اولیه `dede-core`.
 
 ## 10. سیستم deploy
 
@@ -405,16 +411,16 @@ define('WP_DEBUG_DISPLAY', false);
 
 این فایل‌ها ممکن است شامل تصمیم‌های قدیمی مثل staging، branchهای متعدد یا گزارش‌های موازی باشند و نباید مرجع جاری بمانند:
 
-- `docs/CLIENT_PROGRESS_LOG.md`
-- `docs/CODEX_CHANGE_REPORT_TEMPLATE.md`
-- `docs/CODEX_WORKING_RULES.md`
-- `docs/DEDE_ARCHITECTURE_AND_GIT_GUIDE.md`
-- `docs/DEDE_DEVELOPMENT_MASTER_PLAN.md`
-- `docs/GIT_AND_DEPLOY_POLICY.md`
-- `docs/dede_phase_plan.xlsx`
-- `tools/deploy-staging.sh`
-- `tools/staging-git-deploy-guide.md`
-- `tools/local-git-start.md`
+- `docs/archive/phase-0-original/CLIENT_PROGRESS_LOG.md`
+- `docs/archive/phase-0-original/CODEX_CHANGE_REPORT_TEMPLATE.md`
+- `docs/archive/phase-0-original/CODEX_WORKING_RULES.md`
+- `docs/archive/phase-0-original/DEDE_ARCHITECTURE_AND_GIT_GUIDE.md`
+- `docs/archive/phase-0-original/DEDE_DEVELOPMENT_MASTER_PLAN.md`
+- `docs/archive/phase-0-original/GIT_AND_DEPLOY_POLICY.md`
+- `docs/archive/phase-0-original/dede_phase_plan.xlsx`
+- `tools/archive/phase-0-original/deploy-staging.sh`
+- `tools/archive/phase-0-original/staging-git-deploy-guide.md`
+- `tools/archive/phase-0-original/local-git-start.md`
 
 پیشنهاد archive:
 
@@ -422,6 +428,7 @@ define('WP_DEBUG_DISPLAY', false);
 - `tools/archive/phase-0-original/`
 
 در ابتدای پوشه archive یک README کوتاه نوشته شود که این فایل‌ها تاریخی‌اند و منبع حقیقت جاری نیستند.
+فایل‌های بالا اکنون در همین archiveها نگهداری می‌شوند و مرجع جاری نیستند.
 
 ## 15. export دوره‌ای برای بررسی
 
@@ -466,6 +473,6 @@ ZIP دوره‌ای باید شامل موارد زیر باشد:
 ## 17. قانون استفاده توسط ChatGPT
 
 - ChatGPT دسترسی دائمی به فایل‌های لوکال کاربر ندارد.
-- برای پاسخ‌های حساس درباره وضعیت فاز، قدم بعدی، deploy، معماری، پرامپت Codex یا مالکیت قابلیت‌ها، باید نسخه تازه این فایل و `AGENTS.md` از آخرین ZIP یا GitHub بررسی شود.
+- برای پاسخ‌های حساس درباره وضعیت فاز، قدم بعدی، deploy، معماری، پرامپت Codex یا مالکیت قابلیت‌ها، باید مبنای بررسی با اعلام آخرین ZIP، branch و commit و سپس نسخه تازه این فایل و `AGENTS.md` از GitHub یا ZIP انجام شود.
 - اگر نسخه تازه در دسترس نباشد و احتمال تغییر وجود داشته باشد، نباید با قطعیت حدس زده شود.
 - برای سوال‌های عمومی که به وضعیت جاری وابسته نیستند، مراجعه دوباره در هر پیام ضروری نیست.
