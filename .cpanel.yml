@@ -1,0 +1,4 @@
+---
+deployment:
+  tasks:
+    - /bin/bash /home/dedeir/repositories/dede/tools/cpanel-deploy.sh

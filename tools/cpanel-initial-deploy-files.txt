@@ -1,0 +1,7 @@
+# First cPanel deploy bootstrap file list.
+# Used only when /home/dedeir/dede-deploy-state/dede.last_commit does not exist.
+# After the first successful deploy, future deploys use Git diff automatically.
+
+wp-content/themes/DeDeTemPlate/functions.php
+wp-content/plugins/DeDeV1/DeDeV1.php
+wp-content/plugins/DeDeV2/DeDeV2.php
