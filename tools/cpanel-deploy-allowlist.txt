@@ -1,0 +1,7 @@
+wp-content/themes/DeDeTemPlate/
+wp-content/themes/dede-theme/
+wp-content/plugins/DeDeV1/
+wp-content/plugins/DeDeV2/
+wp-content/plugins/dede-core/
+wp-content/plugins/dede-product-operations/
+wp-content/plugins/dede-store-features/
