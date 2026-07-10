@@ -13,6 +13,7 @@ BACKUP_BASE="/home/dedeir/dede-deploy-backups"
 STATE_DIR="/home/dedeir/dede-deploy-state"
 STATE_FILE="${STATE_DIR}/dede.last_commit"
 INITIAL_MANIFEST="${REPO_ROOT}/tools/cpanel-initial-deploy-files.txt"
+ALLOWLIST_FILE="${REPO_ROOT}/tools/cpanel-deploy-allowlist.txt"
 
 DEPLOY_ID="$(date +%Y%m%d-%H%M%S)"
 BACKUP_DIR="${BACKUP_BASE}/${DEPLOY_ID}"
@@ -27,15 +28,6 @@ log() {
 fail() {
   log "ERROR: $*"
   exit 1
-}
-
-is_allowed_path() {
-  case "$1" in
-    wp-content/themes/DeDeTemPlate/*) return 0 ;;
-    wp-content/plugins/DeDeV1/*) return 0 ;;
-    wp-content/plugins/DeDeV2/*) return 0 ;;
-    *) return 1 ;;
-  esac
 }
 
 is_forbidden_path() {
@@ -55,6 +47,67 @@ is_forbidden_path() {
   esac
 }
 
+load_allowed_roots() {
+  [ -f "${ALLOWLIST_FILE}" ] || fail "Allowlist not found: ${ALLOWLIST_FILE}"
+
+  ALLOWED_ROOTS=()
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+
+    [ -z "${line}" ] && continue
+    case "${line}" in
+      \#*) continue ;;
+    esac
+
+    case "${line}" in
+      wp-content/themes/*|wp-content/plugins/*) ;;
+      *) fail "Invalid allowlist entry: ${line}" ;;
+    esac
+
+    case "${line}" in
+      *".."*|*"*"*|*"?"*|*"["*) fail "Invalid allowlist entry: ${line}" ;;
+    esac
+
+    case "${line}" in
+      */) ;;
+      *) fail "Invalid allowlist entry: ${line}" ;;
+    esac
+
+    case "${line}" in
+      wp-content/themes/)
+        fail "Invalid allowlist entry: ${line}"
+        ;;
+      wp-content/plugins/)
+        fail "Invalid allowlist entry: ${line}"
+        ;;
+    esac
+
+    component="${line%/}"
+    component="${component#wp-content/themes/}"
+    component="${component#wp-content/plugins/}"
+    case "${component}" in
+      ""|*/*) fail "Invalid allowlist entry: ${line}" ;;
+    esac
+
+    ALLOWED_ROOTS+=("${line}")
+  done < "${ALLOWLIST_FILE}"
+
+  [ "${#ALLOWED_ROOTS[@]}" -gt 0 ] || fail "Allowlist is empty: ${ALLOWLIST_FILE}"
+}
+
+is_allowed_path() {
+  local rel="$1"
+  local root
+  for root in "${ALLOWED_ROOTS[@]}"; do
+    case "${rel}" in
+      "${root}"*) return 0 ;;
+    esac
+  done
+  return 1
+}
+
 cd "${REPO_ROOT}" || fail "Cannot cd to ${REPO_ROOT}"
 CURRENT_COMMIT="$(git rev-parse HEAD 2>/dev/null)" || fail "Cannot read current Git commit."
 
@@ -67,6 +120,7 @@ log "Backup dir: ${BACKUP_DIR}"
 log "============================================"
 
 [ -d "${LIVE_ROOT}" ] || fail "LIVE_ROOT does not exist: ${LIVE_ROOT}"
+load_allowed_roots
 
 RAW_LIST="${BACKUP_DIR}/changed-files.raw"
 FILTERED_LIST="${BACKUP_DIR}/deploy-files.filtered"
