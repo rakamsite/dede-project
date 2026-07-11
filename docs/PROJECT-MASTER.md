@@ -253,6 +253,7 @@
 - deploy مستقیم روی `dede.ir` فعال است.
 - deploy cPanel از مسیرهای hardcode به allowlist معتبر منتقل شده است.
 - یکپارچه‌سازی قوانین و مستندات انجام شده است.
+- فاز 1-B انجام شده است: ساخت اسکلت اولیه `dede-core` برای dependency guardها و foundation مشترک بدون انتقال منطق تجاری.
 - فاز 1-A انجام و deploy شده است:
   - حذف load دستی WordPress/WooCommerce از قالب
   - safe require برای فایل‌های داخلی
@@ -263,11 +264,11 @@
 
 ### کار جاری
 
-- ساخت اسکلت اولیه `dede-core`.
+- تست و فعال‌سازی کنترل‌شده `dede-core`.
 
 ### قدم بعدی
 
-- تعریف bootstrap، dependency guards و ساختار foundation افزونه `dede-core`.
+- تعریف اولین سرویس مشترک موردنیاز قبل از انتقال قابلیت‌ها.
 
 ## 10. سیستم deploy
 
