@@ -18,6 +18,11 @@ if (!class_exists('DeDe_Core')) {
         private $dependencies;
 
         /**
+         * @var DeDe_Core_Logger
+         */
+        private $logger;
+
+        /**
          * @var bool
          */
         private $booted = false;
@@ -37,6 +42,7 @@ if (!class_exists('DeDe_Core')) {
         private function __construct()
         {
             $this->dependencies = new DeDe_Core_Dependencies();
+            $this->logger = new DeDe_Core_Logger();
         }
 
         private function __clone()
@@ -65,6 +71,14 @@ if (!class_exists('DeDe_Core')) {
         public function dependencies()
         {
             return $this->dependencies;
+        }
+
+        /**
+         * @return DeDe_Core_Logger
+         */
+        public function logger()
+        {
+            return $this->logger;
         }
 
         /**
