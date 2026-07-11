@@ -39,6 +39,10 @@ if (!dede_core_require_file('includes/class-dede-core-dependencies.php')) {
     return;
 }
 
+if (!dede_core_require_file('includes/class-dede-core-logger.php')) {
+    return;
+}
+
 if (!dede_core_require_file('includes/class-dede-core.php')) {
     return;
 }
