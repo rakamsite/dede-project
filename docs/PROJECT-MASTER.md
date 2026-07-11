@@ -252,6 +252,7 @@
 - مسیر repo و live مشخص شده‌اند.
 - deploy مستقیم روی `dede.ir` فعال است.
 - deploy cPanel از مسیرهای hardcode به allowlist معتبر منتقل شده است.
+- یکپارچه‌سازی قوانین و مستندات انجام شده است.
 - فاز 1-A انجام و deploy شده است:
   - حذف load دستی WordPress/WooCommerce از قالب
   - safe require برای فایل‌های داخلی
@@ -262,11 +263,11 @@
 
 ### کار جاری
 
-- یکپارچه‌سازی قوانین و مستندات.
+- ساخت اسکلت اولیه `dede-core`.
 
 ### قدم بعدی
 
-- ساخت اسکلت اولیه `dede-core`.
+- تعریف bootstrap، dependency guards و ساختار foundation افزونه `dede-core`.
 
 ## 10. سیستم deploy
 
@@ -407,7 +408,7 @@ define('WP_DEBUG_DISPLAY', false);
 - `tools/cpanel-initial-deploy-files.txt`
 - ابزار export دوره‌ای
 
-### اسناد قدیمی که باید archive شوند
+### اسناد تاریخی archive‌شده
 
 این فایل‌ها ممکن است شامل تصمیم‌های قدیمی مثل staging، branchهای متعدد یا گزارش‌های موازی باشند و نباید مرجع جاری بمانند:
 
