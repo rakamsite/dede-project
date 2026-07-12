@@ -1,58 +1,51 @@
-# راه‌اندازی Deploy و Rollback پروژه DeDe
+# Deploy و Rollback پروژه DeDe
 
-## فایل‌ها
+## مدل عملیاتی قطعی
 
-- `.github/workflows/deploy-production.yml`
-- `.github/workflows/rollback-production.yml`
-- `tools/cpanel-api-deploy.sh`
-- `tools/cpanel-deploy.sh`
-- `docs/DEPLOYMENT.md`
-
-## تنظیم یک‌باره
-
-### 1. ساخت API Token در cPanel
-
-در cPanel به **Security → Manage API Tokens** بروید و یک توکن با نامی مثل `github-dede-deploy` بسازید.
-
-### 2. ساخت GitHub Actions Secrets
-
-در GitHub به **Settings → Secrets and variables → Actions** بروید و این سه Repository Secret را بسازید:
-
-- `CPANEL_HOST`: hostname داخل URL ورود cPanel، بدون مسیر. نمونه: `server.example.com`
-- `CPANEL_USER`: `dedeir`
-- `CPANEL_API_TOKEN`: توکن مرحله قبل
-
-### 3. مجوز نوشتن Workflow
-
-در **Settings → Actions → General → Workflow permissions** گزینه **Read and write permissions** را فعال کنید. این دسترسی برای tagهای تولید و rollback commit لازم است.
+- منبع کد: branch `main` در GitHub
+- ریپوی cPanel: `/home/dedeir/repositories/dede`
+- مسیر سایت: `/home/dedeir/public_html`
+- SSH و cPanel API Token در دسترس نیست.
+- Deploy از GitHub Actions انجام نمی‌شود.
+- روش اصلی، Git Version Control خود cPanel است.
 
 ## Deploy
 
-در GitHub:
+پس از Merge یا Push تغییرات به `main`:
 
-**Actions → Deploy production → Run workflow**
+1. وارد cPanel شوید.
+2. به **Git Version Control** بروید.
+3. ریپوی `dede-project` را Manage کنید.
+4. در بخش **Pull or Deploy** ابتدا **Update from Remote** را اجرا کنید.
+5. SHA نمایش‌داده‌شده را با آخرین commit شاخه `main` تطبیق دهید.
+6. سپس **Deploy HEAD Commit** را اجرا کنید.
+7. سایت، حساب کاربری، Checkout و لاگ Deploy را بررسی کنید.
 
-Workflow فقط دستی است و Push یا Merge به‌تنهایی سایت را تغییر نمی‌دهد.
+فایل `.cpanel.yml` اسکریپت `tools/cpanel-deploy.sh` را اجرا می‌کند. این اسکریپت فقط فایل‌های تغییرکرده داخل allowlist را منتشر می‌کند و قبل از جایگزینی یا حذف کنترل‌شده، از فایل live بکاپ می‌گیرد.
 
-## Rollback
+## Rollback سریع
 
-در GitHub:
+### روش اول: خاموش‌کردن قابلیت
 
-**Actions → Roll back production → Run workflow**
+برای افزونه‌های جدیدی مثل `DeDe Store Features`، ابتدا افزونه را از پیشخوان وردپرس غیرفعال کنید. قالب در صورت غیرفعال‌بودن افزونه به نسخه legacy برمی‌گردد.
 
-- `target_ref`: برای بازگشت سریع مقدار `production-previous` را نگه دارید؛ یا SHA/tag نسخه موردنظر را وارد کنید.
-- `confirmation`: دقیقاً `ROLLBACK` بنویسید.
+### روش دوم: Git Revert
 
-Rollback بدون force-push، یک commit عادی روی `main` می‌سازد، کدهای قابل‌انتشار نسخه انتخاب‌شده را برمی‌گرداند و همان commit را deploy می‌کند.
+1. commit مشکل‌دار را در GitHub Revert کنید.
+2. تغییر Revert را به `main` برسانید.
+3. در cPanel، **Update from Remote** را اجرا کنید.
+4. سپس **Deploy HEAD Commit** را بزنید.
+5. سایت و لاگ Deploy را کنترل کنید.
 
-## اولین Deploy
+اسکریپت Deploy تغییرات Revert را نیز از آخرین commit موفق تا HEAD محاسبه می‌کند. حذف فایل فقط زیر componentهای allowlist انجام می‌شود و نسخه live پیش از حذف در بکاپ timestamped نگهداری می‌شود.
 
-Workflow پیش از انتشار، SHA آخرین نسخه ثبت‌شده در cPanel را می‌خواند و آن را به‌عنوان نسخه سالم قبلی ثبت می‌کند. بنابراین در حالت عادی، حتی اولین Deploy از GitHub Actions نیز یک نقطه بازگشت خواهد داشت. اگر cPanel هنوز هیچ `last_deployment` معتبری ثبت نکرده باشد، قبل از اولین انتشار باید SHA نسخه فعلی را دستی نگه دارید.
+## بکاپ و لاگ
 
-## محدودیت مهم Rollback
+- بکاپ‌ها: `/home/dedeir/dede-deploy-backups/YYYYMMDD-HHMMSS-*/`
+- وضعیت آخرین Deploy موفق: `/home/dedeir/dede-deploy-state/dede.last_commit`
+- هر Deploy دارای `deploy.log` و فهرست عملیات اعمال‌شده است.
+- اگر کپی فایل در میانه Deploy شکست بخورد، اسکریپت برای فایل‌های اعمال‌شده تلاش به بازگردانی خودکار می‌کند.
 
-Rollback این سیستم فایل‌های قالب و افزونه‌های داخل allowlist را برمی‌گرداند. تغییرات دیتابیس، سفارش‌ها، کاربران و داده‌های تولید با Git بازگردانده نمی‌شوند. هر تغییر ساختاری دیتابیس باید migration نسخه‌دار و برنامه بازگشت جداگانه داشته باشد.
+## محدودیت Rollback
 
-## رفتار در خطا
-
-اگر Workflow انتشار قرمز شد، انتشار موفق ثبت نمی‌شود و tag `production-previous` روی نسخه‌ای می‌ماند که پیش از شروع Deploy روی cPanel فعال بوده است. برای بازگشت، Workflow **Roll back production** را با مقدار پیش‌فرض `production-previous` اجرا کنید.
+Git فقط کد قالب و افزونه‌های داخل allowlist را برمی‌گرداند. سفارش‌ها، کاربران، متاکی‌های ثبت‌شده و سایر تغییرات دیتابیس با Git Revert بازگردانده نمی‌شوند. هر تغییر ساختاری دیتابیس باید migration و برنامه بازگشت مستقل داشته باشد.
