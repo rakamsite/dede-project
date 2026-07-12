@@ -15,6 +15,25 @@ class DeDe_Store_Features_Account_Type
     {
         add_action('wp_ajax_dede_store_select_account_type', array($this, 'ajax_select'));
         add_action('wp_ajax_nopriv_dede_store_select_account_type', array($this, 'ajax_select'));
+        add_action('wp_ajax_Login_register_ajax', array($this, 'intercept_legacy_request'), 1);
+        add_action('wp_ajax_nopriv_Login_register_ajax', array($this, 'intercept_legacy_request'), 1);
+        add_action('user_register', array($this, 'prepare_legacy_registration'), 20);
+    }
+
+    public function prepare_legacy_registration($user_id)
+    {
+        if (!wp_doing_ajax() || empty($_POST['verifySmsPass'])) {
+            return;
+        }
+
+        $this->prepare_selection($user_id);
+    }
+
+    public function intercept_legacy_request()
+    {
+        if (!empty($_POST['updateUserRol'])) {
+            $this->complete_selection(true);
+        }
     }
 
     public function prepare_selection($user_id)
@@ -24,6 +43,16 @@ class DeDe_Store_Features_Account_Type
 
         if (!$user) {
             return false;
+        }
+
+        $mobile = $this->normalize_mobile($user->user_login);
+        if ($mobile) {
+            wp_update_user(array(
+                'ID' => $user_id,
+                'nickname' => $mobile,
+            ));
+            update_user_meta($user_id, 'custom_phone_number', $mobile);
+            update_user_meta($user_id, 'nickname', $mobile);
         }
 
         $token = wp_generate_password(48, false, false);
