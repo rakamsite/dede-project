@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DeDe Store Features
  * Description: قابلیت‌های مشتری و فروشگاه DeDe شامل نوع حساب، پروفایل مشتری و کنترل اطلاعات Checkout.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: DeDe
  * Text Domain: dede-store-features
  */
@@ -11,11 +11,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('DEDE_STORE_FEATURES_VERSION', '1.0.3');
+define('DEDE_STORE_FEATURES_VERSION', '1.0.4');
 define('DEDE_STORE_FEATURES_FILE', __FILE__);
 define('DEDE_STORE_FEATURES_PATH', plugin_dir_path(__FILE__));
 define('DEDE_STORE_FEATURES_URL', plugin_dir_url(__FILE__));
 
+require_once DEDE_STORE_FEATURES_PATH . 'includes/dede-store-features-national-code-guard.php';
 require_once DEDE_STORE_FEATURES_PATH . 'includes/class-dede-store-features-account-type.php';
 require_once DEDE_STORE_FEATURES_PATH . 'includes/trait-dede-store-features-validation.php';
 require_once DEDE_STORE_FEATURES_PATH . 'includes/trait-dede-store-features-location.php';
