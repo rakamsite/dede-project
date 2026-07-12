@@ -37,8 +37,9 @@ class DeDe_Store_Features_Profile
 
         $profile = $this->get_profile($user_id);
         $states = $this->get_state_records();
-        $billing_cities = $this->get_cities_for_state($profile['billing_state']);
-        $shipping_cities = $this->get_cities_for_state($profile['shipping_state']);
+        $cities_by_state = $this->get_all_cities_by_state();
+        $billing_cities = $cities_by_state[$profile['billing_state']] ?? array();
+        $shipping_cities = $cities_by_state[$profile['shipping_state']] ?? array();
         $is_complete = $this->is_complete($user_id);
         $start_step = $is_complete ? 3 : ($this->identity_is_complete($profile, $role) ? 2 : 1);
         $role_labels = array('personal' => 'شخص', 'store' => 'فروشگاه', 'company' => 'شرکت');
@@ -196,13 +197,25 @@ class DeDe_Store_Features_Profile
         $user = get_userdata($user_id);
         $birthday = (string) get_user_meta($user_id, '_dede_birthday_', true);
         $parts = preg_split('#[/\-]#', $birthday);
+        $stored_gender = (string) get_user_meta($user_id, '_dede_Gender_', true);
+        $gender = $this->normalize_gender($stored_gender);
+        if ($stored_gender && $gender !== $stored_gender && in_array($gender, array('آقای', 'خانم'), true)) {
+            update_user_meta($user_id, '_dede_Gender_', $gender);
+        }
+
+        $birthday_timestamp = (string) get_user_meta($user_id, '_dede_birthday_timestamp_', true);
+        if ($birthday && ctype_digit($birthday_timestamp) && strlen($birthday_timestamp) <= 10) {
+            $birthday_timestamp = (string) (((int) $birthday_timestamp) * 1000);
+            update_user_meta($user_id, '_dede_birthday_timestamp_', $birthday_timestamp);
+        }
+
         return array(
             'account_type' => $this->get_account_type($user_id),
             'mobile' => $this->get_verified_mobile($user),
             'first_name' => $user ? (string) $user->first_name : '',
             'last_name' => $user ? (string) $user->last_name : '',
             'email' => $user ? (string) $user->user_email : '',
-            'gender' => (string) get_user_meta($user_id, '_dede_Gender_', true),
+            'gender' => $gender,
             'national_code' => (string) get_user_meta($user_id, '_dede_national_code_', true),
             'national_id' => (string) get_user_meta($user_id, '_dede_national_id_', true),
             'company_name' => (string) get_user_meta($user_id, 'billing_company', true),

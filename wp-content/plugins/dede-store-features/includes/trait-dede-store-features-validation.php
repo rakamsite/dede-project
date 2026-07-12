@@ -12,7 +12,7 @@ trait DeDe_Store_Features_Validation
             'first_name' => sanitize_text_field($request['first_name'] ?? ''),
             'last_name' => sanitize_text_field($request['last_name'] ?? ''),
             'email' => sanitize_email($request['email'] ?? ''),
-            'gender' => sanitize_key($request['gender'] ?? ''),
+            'gender' => $this->normalize_gender($request['gender'] ?? ''),
             'national_code' => $this->digits_only($request['national_code'] ?? ''),
             'national_id' => $this->digits_only($request['national_id'] ?? ''),
             'company_name' => sanitize_text_field($request['company_name'] ?? ''),
@@ -75,6 +75,7 @@ trait DeDe_Store_Features_Validation
             $errors['mobile'] = 'شماره همراه حساب کاربری معتبر نیست.';
         }
 
+        $gender = $this->normalize_gender($data['gender'] ?? '');
         if ('company' === $role) {
             $this->require_persian($data, 'company_name', 'نام شرکت', $errors, true);
             if (!$this->is_valid_national_id($data['national_id'] ?? '')) {
@@ -82,13 +83,13 @@ trait DeDe_Store_Features_Validation
             }
             $this->require_persian($data, 'first_name', 'نام رابط', $errors, false);
             $this->require_persian($data, 'last_name', 'نام خانوادگی رابط', $errors, false);
-            if (!empty($data['gender']) && !in_array($data['gender'], array('male', 'female'), true)) {
+            if ($gender && !in_array($gender, array('آقای', 'خانم'), true)) {
                 $errors['gender'] = 'جنسیت رابط معتبر نیست.';
             }
         } else {
             $this->require_persian($data, 'first_name', 'نام', $errors, true);
             $this->require_persian($data, 'last_name', 'نام خانوادگی', $errors, true);
-            if (!in_array($data['gender'] ?? '', array('male', 'female'), true)) {
+            if (!in_array($gender, array('آقای', 'خانم'), true)) {
                 $errors['gender'] = 'انتخاب جنسیت الزامی است.';
             }
             if (!$this->is_valid_national_code($data['national_code'] ?? '')) {
@@ -139,6 +140,19 @@ trait DeDe_Store_Features_Validation
         if ($length < 5) {
             $errors[$prefix . '_address_1'] = 'آدرس کامل را وارد کنید.';
         }
+    }
+
+    private function normalize_gender($value)
+    {
+        $value = trim(sanitize_text_field((string) $value));
+        $aliases = array(
+            'male' => 'آقای',
+            'آقا' => 'آقای',
+            'آقای' => 'آقای',
+            'female' => 'خانم',
+            'خانم' => 'خانم',
+        );
+        return $aliases[$value] ?? $value;
     }
 
     private function normalize_digits($value)
@@ -248,7 +262,8 @@ trait DeDe_Store_Features_Validation
         }
         return array(
             'jalali' => sprintf('%04d/%02d/%02d', $year, $month, $day),
-            'timestamp' => (string) $birth_date->getTimestamp(),
+            // Persian Datepicker legacy altField stored JavaScript Unix time in milliseconds.
+            'timestamp' => (string) ($birth_date->getTimestamp() * 1000),
         );
     }
 
