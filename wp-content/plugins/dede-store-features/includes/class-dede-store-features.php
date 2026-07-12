@@ -145,6 +145,7 @@ final class DeDe_Store_Features
 
         $css = DEDE_STORE_FEATURES_PATH . 'assets/css/customer-profile.css';
         $js = DEDE_STORE_FEATURES_PATH . 'assets/js/customer-profile.js';
+        $guard = DEDE_STORE_FEATURES_PATH . 'assets/js/customer-profile-guard.js';
 
         wp_enqueue_style(
             'dede-store-features-customer-profile',
@@ -158,6 +159,13 @@ final class DeDe_Store_Features
             DEDE_STORE_FEATURES_URL . 'assets/js/customer-profile.js',
             array(),
             file_exists($js) ? (string) filemtime($js) : DEDE_STORE_FEATURES_VERSION,
+            true
+        );
+        wp_enqueue_script(
+            'dede-store-features-customer-profile-guard',
+            DEDE_STORE_FEATURES_URL . 'assets/js/customer-profile-guard.js',
+            array('dede-store-features-customer-profile'),
+            file_exists($guard) ? (string) filemtime($guard) : DEDE_STORE_FEATURES_VERSION,
             true
         );
 
