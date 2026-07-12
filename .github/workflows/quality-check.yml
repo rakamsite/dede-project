@@ -38,6 +38,12 @@ jobs:
           php -l wp-content/themes/DeDeTemPlate/woocommerce/myaccount/my-account.php
           php -l wp-content/themes/DeDeTemPlate/woocommerce/checkout/form-checkout.php
 
+      - name: Test national code validation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          php tools/tests/national-code-validation.php
+
       - name: Check JavaScript syntax
         shell: bash
         run: |
