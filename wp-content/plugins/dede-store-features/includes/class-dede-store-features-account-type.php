@@ -15,6 +15,7 @@ class DeDe_Store_Features_Account_Type
     {
         add_action('wp_ajax_dede_store_select_account_type', array($this, 'ajax_select'));
         add_action('wp_ajax_nopriv_dede_store_select_account_type', array($this, 'ajax_select'));
+        add_action('wp_ajax_dede_store_change_account_type', array($this, 'ajax_change'));
         add_action('wp_ajax_Login_register_ajax', array($this, 'intercept_legacy_request'), 1);
         add_action('wp_ajax_nopriv_Login_register_ajax', array($this, 'intercept_legacy_request'), 1);
         add_action('user_register', array($this, 'prepare_legacy_registration'), 20);
@@ -70,8 +71,10 @@ class DeDe_Store_Features_Account_Type
         return '1' === (string) get_user_meta(absint($user_id), '_dede_account_type_pending_', true);
     }
 
-    public function render()
+    public function render($mode = 'create', $current_type = '')
     {
+        $mode = 'change' === $mode ? 'change' : 'create';
+        $current_type = in_array($current_type, $this->allowed_types, true) ? $current_type : '';
         $options = array(
             'personal' => array(
                 'title' => 'شخص',
@@ -104,6 +107,59 @@ class DeDe_Store_Features_Account_Type
         }
 
         $this->complete_selection(false);
+    }
+
+    public function ajax_change()
+    {
+        check_ajax_referer('dede_store_account_type', 'nonce');
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'ابتدا وارد حساب کاربری شوید.'), 401);
+        }
+        if ('POST' !== ($_SERVER['REQUEST_METHOD'] ?? '')) {
+            wp_send_json_error(array('message' => 'درخواست نامعتبر است.'), 405);
+        }
+
+        $type = sanitize_key(wp_unslash($_POST['select_type'] ?? ''));
+        if (!in_array($type, $this->allowed_types, true)) {
+            wp_send_json_error(array('message' => 'نوع حساب انتخاب‌شده معتبر نیست.'), 422);
+        }
+
+        $user_id = get_current_user_id();
+        $current_type = $this->get_current_type($user_id);
+        if (!$current_type) {
+            wp_send_json_error(array('message' => 'نوع حساب فعلی معتبر نیست.'), 422);
+        }
+
+        $redirect = wp_validate_redirect(
+            esc_url_raw(wp_unslash($_POST['redirect_url'] ?? '')),
+            function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : home_url('/my-account')
+        );
+
+        if ($current_type === $type) {
+            wp_send_json_success(array(
+                'message' => 'نوع حساب تغییری نکرد.',
+                'redirect' => $redirect,
+            ));
+        }
+
+        $updated = wp_update_user(array(
+            'ID' => $user_id,
+            'role' => $type,
+        ));
+        if (is_wp_error($updated)) {
+            wp_send_json_error(array('message' => 'تغییر نوع حساب انجام نشد.'), 500);
+        }
+
+        $this->clear_incompatible_profile_data($user_id, $type);
+        update_user_meta($user_id, 'customer_type', $type);
+        delete_user_meta($user_id, '_dede_account_type_pending_');
+
+        do_action('dede_store_features_account_type_changed', $user_id, $current_type, $type);
+
+        wp_send_json_success(array(
+            'message' => 'نوع حساب تغییر کرد. اطلاعات ضروری نوع جدید را تکمیل کنید.',
+            'redirect' => $redirect,
+        ));
     }
 
     public function handle_legacy_request()
@@ -169,6 +225,42 @@ class DeDe_Store_Features_Account_Type
             'redirect' => function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : home_url('/my-account'),
             'legacy' => (bool) $legacy_request,
         ));
+    }
+
+    private function get_current_type($user_id)
+    {
+        $type = sanitize_key((string) get_user_meta($user_id, 'customer_type', true));
+        if (in_array($type, $this->allowed_types, true)) {
+            return $type;
+        }
+
+        $user = get_userdata($user_id);
+        foreach ($user ? (array) $user->roles : array() as $role) {
+            if (in_array($role, $this->allowed_types, true)) {
+                return $role;
+            }
+        }
+
+        return '';
+    }
+
+    private function clear_incompatible_profile_data($user_id, $new_type)
+    {
+        delete_user_meta($user_id, '_dede_profile_complete_');
+        delete_user_meta($user_id, '_dede_profile_completed_at_');
+
+        $clear = array();
+        if ('company' === $new_type) {
+            $clear = array('_dede_national_code_', '_dede_shop_name_');
+        } elseif ('store' === $new_type) {
+            $clear = array('_dede_national_id_', '_dede_Economic_Code_', 'billing_company', 'shipping_company');
+        } else {
+            $clear = array('_dede_national_id_', '_dede_shop_name_', '_dede_Economic_Code_', 'billing_company', 'shipping_company');
+        }
+
+        foreach ($clear as $key) {
+            update_user_meta($user_id, $key, '');
+        }
     }
 
     private function resolve_token_user_id()
