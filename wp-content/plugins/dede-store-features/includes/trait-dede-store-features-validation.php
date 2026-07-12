@@ -13,25 +13,25 @@ trait DeDe_Store_Features_Validation
             'last_name' => sanitize_text_field($request['last_name'] ?? ''),
             'email' => sanitize_email($request['email'] ?? ''),
             'gender' => sanitize_key($request['gender'] ?? ''),
-            'national_code' => preg_replace('/\D+/', '', (string) ($request['national_code'] ?? '')),
-            'national_id' => preg_replace('/\D+/', '', (string) ($request['national_id'] ?? '')),
+            'national_code' => $this->digits_only($request['national_code'] ?? ''),
+            'national_id' => $this->digits_only($request['national_id'] ?? ''),
             'company_name' => sanitize_text_field($request['company_name'] ?? ''),
             'store_name' => sanitize_text_field($request['store_name'] ?? ''),
-            'economic_code' => sanitize_text_field($request['economic_code'] ?? ''),
-            'telegram' => sanitize_text_field($request['telegram'] ?? ''),
-            'birthday_year' => absint($request['birthday_year'] ?? 0),
-            'birthday_month' => absint($request['birthday_month'] ?? 0),
-            'birthday_day' => absint($request['birthday_day'] ?? 0),
+            'economic_code' => $this->digits_only($request['economic_code'] ?? ''),
+            'telegram' => sanitize_text_field($this->normalize_digits($request['telegram'] ?? '')),
+            'birthday_year' => absint($this->normalize_digits($request['birthday_year'] ?? 0)),
+            'birthday_month' => absint($this->normalize_digits($request['birthday_month'] ?? 0)),
+            'birthday_day' => absint($this->normalize_digits($request['birthday_day'] ?? 0)),
             'billing_state' => sanitize_text_field($request['billing_state'] ?? ''),
-            'billing_city' => absint($request['billing_city'] ?? 0),
-            'billing_postcode' => preg_replace('/\D+/', '', (string) ($request['billing_postcode'] ?? '')),
-            'billing_phone' => preg_replace('/\D+/', '', (string) ($request['billing_phone'] ?? '')),
+            'billing_city' => absint($this->normalize_digits($request['billing_city'] ?? 0)),
+            'billing_postcode' => $this->digits_only($request['billing_postcode'] ?? ''),
+            'billing_phone' => $this->digits_only($request['billing_phone'] ?? ''),
             'billing_address_1' => sanitize_textarea_field($request['billing_address_1'] ?? ''),
             'same_as_billing' => !empty($request['same_as_billing']),
             'shipping_state' => sanitize_text_field($request['shipping_state'] ?? ''),
-            'shipping_city' => absint($request['shipping_city'] ?? 0),
-            'shipping_postcode' => preg_replace('/\D+/', '', (string) ($request['shipping_postcode'] ?? '')),
-            'shipping_phone' => preg_replace('/\D+/', '', (string) ($request['shipping_phone'] ?? '')),
+            'shipping_city' => absint($this->normalize_digits($request['shipping_city'] ?? 0)),
+            'shipping_postcode' => $this->digits_only($request['shipping_postcode'] ?? ''),
+            'shipping_phone' => $this->digits_only($request['shipping_phone'] ?? ''),
             'shipping_address_1' => sanitize_textarea_field($request['shipping_address_1'] ?? ''),
         );
 
@@ -141,9 +141,24 @@ trait DeDe_Store_Features_Validation
         }
     }
 
+    private function normalize_digits($value)
+    {
+        return strtr((string) $value, array(
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+        ));
+    }
+
+    private function digits_only($value)
+    {
+        return preg_replace('/\D+/', '', $this->normalize_digits($value));
+    }
+
     private function normalize_mobile($value)
     {
-        $digits = preg_replace('/\D+/', '', (string) $value);
+        $digits = $this->digits_only($value);
         if (0 === strpos($digits, '0098')) {
             $digits = substr($digits, 2);
         }
@@ -158,12 +173,16 @@ trait DeDe_Store_Features_Validation
 
     private function is_persian_text($value)
     {
-        return (bool) preg_match('/^[\x{0600}-\x{06FF}\x{200C}\s\-\.\(\)]+$/u', trim((string) $value));
+        $value = trim((string) $value);
+        if (preg_match('/[0-9۰-۹٠-٩]/u', $value)) {
+            return false;
+        }
+        return (bool) preg_match('/^[\x{0600}-\x{06FF}\x{200C}\s\-\.\(\)]+$/u', $value);
     }
 
     public function is_valid_national_code($code)
     {
-        $code = preg_replace('/\D+/', '', (string) $code);
+        $code = $this->digits_only($code);
         if (!preg_match('/^\d{10}$/', $code) || preg_match('/^(\d)\1{9}$/', $code)) {
             return false;
         }
@@ -178,8 +197,10 @@ trait DeDe_Store_Features_Validation
 
     public function is_valid_national_id($id)
     {
-        $id = preg_replace('/\D+/', '', (string) $id);
-        if (!preg_match('/^\d{11}$/', $id) || preg_match('/^(\d)\1{10}$/', $id)) {
+        $id = $this->digits_only($id);
+        if (!preg_match('/^\d{11}$/', $id)
+            || preg_match('/^(\d)\1{10}$/', $id)
+            || 0 === (int) substr($id, 3, 6)) {
             return false;
         }
         $coefficients = array(29, 27, 23, 19, 17, 29, 27, 23, 19, 17);
@@ -213,13 +234,21 @@ trait DeDe_Store_Features_Validation
             return new WP_Error('invalid_birthday', 'تاریخ تولد معتبر نیست.');
         }
 
-        $timestamp = gmmktime(0, 0, 0, $gm, $gd, $gy);
-        if ($timestamp >= strtotime('-10 years', current_time('timestamp'))) {
+        $birth_date = DateTimeImmutable::createFromFormat(
+            '!Y-n-j',
+            sprintf('%d-%d-%d', $gy, $gm, $gd),
+            wp_timezone()
+        );
+        if (!$birth_date) {
+            return new WP_Error('invalid_birthday', 'تاریخ تولد معتبر نیست.');
+        }
+        $cutoff = current_datetime()->modify('-10 years')->setTime(0, 0, 0);
+        if ($birth_date >= $cutoff) {
             return new WP_Error('under_age', 'سن کاربر باید بیشتر از ۱۰ سال باشد.');
         }
         return array(
             'jalali' => sprintf('%04d/%02d/%02d', $year, $month, $day),
-            'timestamp' => (string) $timestamp,
+            'timestamp' => (string) $birth_date->getTimestamp(),
         );
     }
 
