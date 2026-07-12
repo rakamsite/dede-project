@@ -125,9 +125,12 @@ final class DeDe_Store_Features
             true
         );
 
-        ob_start();
-        $this->account_type->render();
-        $account_type_html = ob_get_clean();
+        $account_type_html = '';
+        if (!is_user_logged_in()) {
+            ob_start();
+            $this->account_type->render();
+            $account_type_html = ob_get_clean();
+        }
 
         wp_localize_script('dede-store-features-customer-profile', 'DedeStoreFeatures', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
