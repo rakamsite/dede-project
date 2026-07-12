@@ -61,23 +61,52 @@ trait DeDe_Store_Features_Location
 
     private function get_cities_for_state($state_code)
     {
-        $state = $this->state_record($state_code);
-        if (!$state || !$state['term_id'] || !taxonomy_exists('city_country')) {
-            return array();
+        $map = $this->get_all_cities_by_state();
+        return $map[$state_code] ?? array();
+    }
+
+    private function get_all_cities_by_state()
+    {
+        static $map;
+        if (null !== $map) {
+            return $map;
         }
+
+        $map = array();
+        $parents = array();
+        foreach ($this->get_state_records() as $code => $state) {
+            $map[$code] = array();
+            if (!empty($state['term_id'])) {
+                $parents[(int) $state['term_id']] = $code;
+            }
+        }
+
+        if (!$parents || !taxonomy_exists('city_country')) {
+            return $map;
+        }
+
         $terms = get_terms(array(
             'taxonomy' => 'city_country',
-            'parent' => $state['term_id'],
             'hide_empty' => false,
             'orderby' => 'name',
             'order' => 'ASC',
         ));
         if (is_wp_error($terms)) {
-            return array();
+            return $map;
         }
-        return array_map(static function ($term) {
-            return array('id' => (int) $term->term_id, 'name' => $term->name);
-        }, $terms);
+
+        foreach ($terms as $term) {
+            $parent = (int) $term->parent;
+            if (!$parent || !isset($parents[$parent])) {
+                continue;
+            }
+            $map[$parents[$parent]][] = array(
+                'id' => (int) $term->term_id,
+                'name' => $term->name,
+            );
+        }
+
+        return $map;
     }
 
     private function city_belongs_to_state($city_id, $state_code)
