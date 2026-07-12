@@ -1,0 +1,143 @@
+name: Roll back production
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_ref:
+        description: Commit SHA or production tag to restore
+        required: true
+        default: production-previous
+        type: string
+      confirmation:
+        description: Type ROLLBACK to continue
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dede-production
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    name: Restore deployable code and redeploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate rollback request
+        shell: bash
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          TARGET_REF: ${{ inputs.target_ref }}
+        run: |
+          set -Eeuo pipefail
+          [ "$CONFIRMATION" = "ROLLBACK" ] || {
+            echo "Confirmation must be exactly ROLLBACK." >&2
+            exit 1
+          }
+          git fetch origin main --tags --force
+          target_sha="$(git rev-parse --verify "${TARGET_REF}^{commit}")"
+          git merge-base --is-ancestor "$target_sha" origin/main || {
+            echo "Target must be an existing ancestor of main." >&2
+            exit 1
+          }
+          echo "Rollback target: $target_sha"
+
+      - name: Create rollback commit on main
+        id: rollback_commit
+        shell: bash
+        env:
+          TARGET_REF: ${{ inputs.target_ref }}
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main --tags --force
+          git checkout -B rollback-work origin/main
+
+          target_sha="$(git rev-parse --verify "${TARGET_REF}^{commit}")"
+          cp tools/cpanel-api-deploy.sh /tmp/dede-cpanel-api-deploy.sh
+          chmod +x /tmp/dede-cpanel-api-deploy.sh
+
+          while IFS= read -r root || [ -n "$root" ]; do
+            root="${root%$'\r'}"
+            [[ -z "$root" || "$root" == \#* ]] && continue
+            path="${root%/}"
+
+            git rm -r --ignore-unmatch -- "$path" >/dev/null 2>&1 || true
+            if git cat-file -e "${target_sha}:${path}" 2>/dev/null; then
+              git checkout "$target_sha" -- "$path"
+            fi
+          done < tools/cpanel-deploy-allowlist.txt
+
+          while IFS= read -r root || [ -n "$root" ]; do
+            root="${root%$'\r'}"
+            [[ -z "$root" || "$root" == \#* ]] && continue
+            path="${root%/}"
+            [ -d "$path" ] || continue
+            find "$path" -type f -name '*.php' -print0
+          done < tools/cpanel-deploy-allowlist.txt \
+            | xargs -0 -r -n 1 php -l
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Deployable files already match ${target_sha}." >&2
+            exit 1
+          fi
+
+          git commit -m "rollback: restore deployable code to ${target_sha:0:12}"
+          rollback_sha="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+
+          echo "target_sha=$target_sha" >> "$GITHUB_OUTPUT"
+          echo "rollback_sha=$rollback_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy rollback through cPanel API
+        shell: bash
+        env:
+          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
+          CPANEL_REPOSITORY_ROOT: /home/dedeir/repositories/dede
+          CPANEL_BRANCH: main
+          PRODUCTION_HEALTHCHECK_URL: https://dede.ir/
+          ROLLBACK_SHA: ${{ steps.rollback_commit.outputs.rollback_sha }}
+        run: |
+          set -Eeuo pipefail
+          bash /tmp/dede-cpanel-api-deploy.sh "$ROLLBACK_SHA"
+
+      - name: Record successful rollback
+        shell: bash
+        env:
+          TARGET_SHA: ${{ steps.rollback_commit.outputs.target_sha }}
+          ROLLBACK_SHA: ${{ steps.rollback_commit.outputs.rollback_sha }}
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main --tags --force
+
+          git tag -f production-previous "$TARGET_SHA"
+          git push origin +refs/tags/production-previous
+
+          git tag -f production-current "$ROLLBACK_SHA"
+          git push origin +refs/tags/production-current
+
+          timestamp="$(date -u '+%Y%m%d-%H%M%S')"
+          rollback_tag="production-rollback-${timestamp}-${GITHUB_RUN_ID}-${ROLLBACK_SHA:0:7}"
+          git tag "$rollback_tag" "$ROLLBACK_SHA"
+          git push origin "refs/tags/$rollback_tag"
+
+          {
+            echo "## Production rollback"
+            echo "- Restored application snapshot: \`$TARGET_SHA\`"
+            echo "- Rollback commit: \`$ROLLBACK_SHA\`"
+            echo "- Snapshot tag: \`$rollback_tag\`"
+          } >> "$GITHUB_STEP_SUMMARY"
