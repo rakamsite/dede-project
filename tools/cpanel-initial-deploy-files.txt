@@ -3,5 +3,17 @@
 # After the first successful deploy, future deploys use Git diff automatically.
 
 wp-content/themes/DeDeTemPlate/functions.php
+wp-content/themes/DeDeTemPlate/woocommerce/myaccount/my-account.php
+wp-content/themes/DeDeTemPlate/woocommerce/checkout/form-checkout.php
 wp-content/plugins/DeDeV1/DeDeV1.php
 wp-content/plugins/DeDeV2/DeDeV2.php
+wp-content/plugins/dede-store-features/dede-store-features.php
+wp-content/plugins/dede-store-features/includes/class-dede-store-features.php
+wp-content/plugins/dede-store-features/includes/class-dede-store-features-account-type.php
+wp-content/plugins/dede-store-features/includes/trait-dede-store-features-validation.php
+wp-content/plugins/dede-store-features/includes/trait-dede-store-features-location.php
+wp-content/plugins/dede-store-features/includes/class-dede-store-features-profile.php
+wp-content/plugins/dede-store-features/templates/account-type-selector.php
+wp-content/plugins/dede-store-features/templates/customer-profile.php
+wp-content/plugins/dede-store-features/assets/js/customer-profile.js
+wp-content/plugins/dede-store-features/assets/css/customer-profile.css

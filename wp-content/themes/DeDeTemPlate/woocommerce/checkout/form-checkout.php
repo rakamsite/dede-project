@@ -23,12 +23,16 @@ $discount_total = WC()->cart->get_discount_total();
 $total_prices = WC()->cart->get_subtotal();
 $current_user = wp_get_current_user();
 $user_role = $current_user->roles;
+$dede_store_profile_enabled = function_exists('dede_store_features_render_customer_profile');
+$national_code_validate = '';
 
-foreach ($user_role as $role) {
-    $national_code_validate = match ($role) {
-        "company" => get_user_meta($current_user->ID, '_dede_national_id_', true),
-        default => get_user_meta($current_user->ID, '_dede_national_code_', true),
-    };
+if (!$dede_store_profile_enabled) {
+    foreach ($user_role as $role) {
+        $national_code_validate = match ($role) {
+            "company" => get_user_meta($current_user->ID, '_dede_national_id_', true),
+            default => get_user_meta($current_user->ID, '_dede_national_code_', true),
+        };
+    }
 }
 
 $first_name = $current_user->first_name;
@@ -51,7 +55,7 @@ foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
     }
 }
 $CardCondition = cmb2_get_option('buy_condition_option_key', 'buy_condition_value');
-$cart_discount_percent = $discount_total / $total_prices * 100;
+$cart_discount_percent = $total_prices > 0 ? ($discount_total / $total_prices * 100) : 0;
 if (!$checkout->is_registration_enabled() && $checkout->is_registration_required() && !is_user_logged_in()) {
     echo esc_html(apply_filters('woocommerce_checkout_must_be_logged_in_message', __('You must be logged in to checkout.', 'woocommerce')));
 
@@ -59,7 +63,7 @@ if (!$checkout->is_registration_enabled() && $checkout->is_registration_required
 }
 $adminPanelLink = "'" . home_url('/my-account') . "'";
 $calculated_wallet_discount_code = get_user_meta($current_user->ID, '_dede_calculated_wallet_discount_code', true);
-if (!$first_name || !$last_name || empty($national_code_validate)) { ?>
+if (!$dede_store_profile_enabled && (!$first_name || !$last_name || empty($national_code_validate))) { ?>
     <div class='fixed w-full h-full top-0 bg-black/80 rounded-lg flex justify-center items-center z-50 '>
         <div class="bg-white rounded-lg w-full md:w-1/3 auto p-10 text-center space-y-1">
             <h3>اطلاعات حساب کاربری شما کامل نیست .</h3>
@@ -83,7 +87,13 @@ if (!$first_name || !$last_name || empty($national_code_validate)) { ?>
 <div class="container mx-auto">
     <div class="flex md:flex-row flex-col gap-5 pt-6">
         <div class="basis-9/12 p-4">
-            <?php get_template_part('woocommerce/myaccount/Information'); ?>
+            <?php
+            if ($dede_store_profile_enabled) {
+                dede_store_features_render_customer_profile('checkout');
+            } else {
+                get_template_part('woocommerce/myaccount/Information');
+            }
+            ?>
         </div>
         <div class="md:basis-3/12 px-3 md:px-0 overflow-y-auto">
             <form name="checkout" method="post" class="checkout woocommerce-checkout "

@@ -120,7 +120,11 @@ $comment_information = cmb2_get_option( 'Comment_section_key', 'illegal_text' );
         </div>
 		<?php
 		get_template_part( 'woocommerce/myaccount/MainMyAccount' );
-		get_template_part( 'woocommerce/myaccount/Information' );
+		if ( function_exists( 'dede_store_features_render_customer_profile' ) ) {
+			dede_store_features_render_customer_profile( 'account' );
+		} else {
+			get_template_part( 'woocommerce/myaccount/Information' );
+		}
 		get_template_part( 'woocommerce/myaccount/WalletInformation' );
 		get_template_part( 'woocommerce/myaccount/orders' );
 		get_template_part( 'woocommerce/myaccount/guarantee' );
