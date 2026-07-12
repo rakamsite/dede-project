@@ -1,0 +1,48 @@
+name: Import dedeaftersales
+
+on:
+  push:
+    branches:
+      - agent/add-dedeaftersales
+    paths:
+      - tools/import/dedeaftersales.zip
+      - tools/import/import-dedeaftersales.py
+      - .github/workflows/import-dedeaftersales.yml
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/add-dedeaftersales
+          fetch-depth: 0
+      - name: Import and patch plugin
+        run: |
+          set -Eeuo pipefail
+          rm -rf /tmp/dedeaftersales-import wp-content/plugins/dedeaftersales
+          mkdir -p /tmp/dedeaftersales-import wp-content/plugins
+          unzip -q tools/import/dedeaftersales.zip -d /tmp/dedeaftersales-import
+          cp -a /tmp/dedeaftersales-import/dedeaftersales wp-content/plugins/dedeaftersales
+          python tools/import/import-dedeaftersales.py
+      - name: Validate imported plugin
+        run: |
+          set -Eeuo pipefail
+          find wp-content/plugins/dedeaftersales -type f -name '*.php' -print0 | xargs -0 -r -n 1 php -l
+          find wp-content/plugins/dedeaftersales/assets/js -type f -name '*.js' -print0 | xargs -0 -r -n 1 node --check
+          if grep -RInE '^[[:space:]]*(button|input|select|textarea|table|th|td|tr)([[:space:]:,{.#\[])|^[[:space:]]*\.container[[:space:]]*\{' wp-content/plugins/dedeaftersales/assets/css; then
+            echo 'Unscoped global selector found.' >&2
+            exit 1
+          fi
+      - name: Commit imported source
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add wp-content/plugins/dedeaftersales README.md docs/PROJECT-MASTER.md tools/cpanel-deploy-allowlist.txt tools/cpanel-initial-deploy-files.txt .github/workflows/quality-check.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "افزودن افزونه خدمات پس از فروش و محدودسازی استایل‌ها"
+          git push origin HEAD:agent/add-dedeaftersales
