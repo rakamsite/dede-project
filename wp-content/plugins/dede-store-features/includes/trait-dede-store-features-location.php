@@ -29,11 +29,21 @@ trait DeDe_Store_Features_Location
         }
 
         $terms_by_name = array();
+        $terms_by_legacy_key = array();
         foreach ($terms as $term) {
             $terms_by_name[$this->normalize_persian($term->name)] = $term;
+            $terms_by_legacy_key[$this->legacy_state_key($term->name)] = $term;
         }
+
         foreach ((array) WC()->countries->get_states('IR') as $code => $name) {
             $term = $terms_by_name[$this->normalize_persian($name)] ?? null;
+            if (!$term) {
+                $term = $terms_by_legacy_key[$this->legacy_state_key($name)] ?? null;
+            }
+            if (!$term && 'CHB' === $code) {
+                $term = $terms_by_legacy_key['CHHARMHALBKHTYARY'] ?? null;
+            }
+
             $records[$code] = array(
                 'code' => $code,
                 'name' => $name,
@@ -83,5 +93,19 @@ trait DeDe_Store_Features_Location
         $value = str_replace(array('ي', 'ى', 'ك', 'ۀ', 'ة'), array('ی', 'ی', 'ک', 'ه', 'ه'), (string) $value);
         $value = preg_replace('/[\x{200C}\s]+/u', '', $value);
         return function_exists('mb_strtolower') ? mb_strtolower(trim($value), 'UTF-8') : trim($value);
+    }
+
+    private function legacy_state_key($value)
+    {
+        $map = array(
+            'آ' => 'A', 'ا' => 'A', 'ب' => 'B', 'پ' => 'P', 'ت' => 'T', 'ث' => 'S',
+            'ج' => 'J', 'چ' => 'CH', 'ح' => 'H', 'خ' => 'KH', 'د' => 'D', 'ذ' => 'Z',
+            'ر' => 'R', 'ز' => 'Z', 'ژ' => 'ZH', 'س' => 'S', 'ش' => 'SH', 'ص' => 'S',
+            'ض' => 'Z', 'ط' => 'T', 'ظ' => 'Z', 'ع' => 'A', 'غ' => 'GH', 'ف' => 'F',
+            'ق' => 'GH', 'ک' => 'K', 'ك' => 'K', 'گ' => 'K', 'ل' => 'L', 'م' => 'M',
+            'ن' => 'N', 'و' => 'V', 'ه' => 'H', 'ی' => 'Y', 'ي' => 'Y',
+        );
+        $key = strtr((string) $value, $map);
+        return strtoupper((string) preg_replace('/[^A-Z0-9]+/i', '', $key));
     }
 }
