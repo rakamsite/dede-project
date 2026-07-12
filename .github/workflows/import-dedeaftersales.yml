@@ -1,13 +1,14 @@
 name: Import dedeaftersales
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/add-dedeaftersales
+      - main
     paths:
       - tools/import/dedeaftersales.zip
       - tools/import/import-dedeaftersales.py
       - .github/workflows/import-dedeaftersales.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
