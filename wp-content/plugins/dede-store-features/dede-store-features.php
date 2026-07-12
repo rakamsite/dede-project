@@ -17,6 +17,8 @@ define('DEDE_STORE_FEATURES_PATH', plugin_dir_path(__FILE__));
 define('DEDE_STORE_FEATURES_URL', plugin_dir_url(__FILE__));
 
 require_once DEDE_STORE_FEATURES_PATH . 'includes/class-dede-store-features-account-type.php';
+require_once DEDE_STORE_FEATURES_PATH . 'includes/trait-dede-store-features-validation.php';
+require_once DEDE_STORE_FEATURES_PATH . 'includes/trait-dede-store-features-location.php';
 require_once DEDE_STORE_FEATURES_PATH . 'includes/class-dede-store-features-profile.php';
 require_once DEDE_STORE_FEATURES_PATH . 'includes/class-dede-store-features.php';
 
