@@ -43,6 +43,7 @@ final class DeDe_Store_Features
         $this->profile = new DeDe_Store_Features_Profile();
 
         add_action('init', array($this, 'disable_legacy_profile_endpoint'), 100);
+        add_action('wp', array($this, 'prepare_missing_account_type'), 20);
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'), 100);
         add_action('wp_footer', array($this, 'render_pending_account_type'), 5);
         add_filter('woocommerce_checkout_fields', array($this, 'adjust_checkout_fields'));
@@ -64,6 +65,34 @@ final class DeDe_Store_Features
             remove_action('wp_ajax_user_information_manager', 'user_information_manager_callback');
             remove_action('wp_ajax_nopriv_user_information_manager', 'user_information_manager_callback');
         }
+    }
+
+    public function prepare_missing_account_type()
+    {
+        if (!is_user_logged_in()) {
+            return;
+        }
+
+        $user_id = get_current_user_id();
+        if ($this->profile->get_account_type($user_id) || $this->account_type->is_pending($user_id)) {
+            return;
+        }
+
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return;
+        }
+
+        $eligible_roles = apply_filters(
+            'dede_store_features_account_type_prompt_roles',
+            array('customer', 'subscriber'),
+            $user
+        );
+        if (!array_intersect((array) $user->roles, (array) $eligible_roles)) {
+            return;
+        }
+
+        $this->account_type->prepare_selection($user_id);
     }
 
     public function adjust_checkout_fields($fields)
@@ -107,6 +136,13 @@ final class DeDe_Store_Features
             return;
         }
 
+        $pending = is_user_logged_in() && $this->account_type->is_pending(get_current_user_id());
+        $is_account = function_exists('is_account_page') && is_account_page();
+        $is_checkout_page = function_exists('is_checkout') && is_checkout();
+        if (is_user_logged_in() && !$pending && !$is_account && !$is_checkout_page) {
+            return;
+        }
+
         $css = DEDE_STORE_FEATURES_PATH . 'assets/css/customer-profile.css';
         $js = DEDE_STORE_FEATURES_PATH . 'assets/js/customer-profile.js';
 
@@ -138,7 +174,7 @@ final class DeDe_Store_Features
             'citiesAction' => 'dede_store_get_cities',
             'accountTypeAction' => 'dede_store_select_account_type',
             'profileNonce' => is_user_logged_in() ? wp_create_nonce('dede_store_profile') : '',
-            'accountTypeNonce' => wp_create_nonce('dede_store_account_type'),
+            'accountTypeNonce' => is_user_logged_in() ? wp_create_nonce('dede_store_account_type') : '',
             'accountTypeManaged' => true,
             'accountTypeHtml' => $account_type_html,
             'messages' => array(
@@ -146,6 +182,7 @@ final class DeDe_Store_Features
                 'required' => 'تکمیل این فیلد الزامی است.',
                 'saved' => 'اطلاعات با موفقیت ذخیره شد.',
                 'loadingCities' => 'در حال دریافت شهرها…',
+                'unsavedCheckout' => 'تغییرات اطلاعات شما هنوز ذخیره نشده است. ابتدا اطلاعات را ذخیره کنید.',
             ),
         ));
     }
