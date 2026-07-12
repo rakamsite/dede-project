@@ -45,7 +45,7 @@ final class DeDe_Store_Features
         add_action('init', array($this, 'disable_legacy_profile_endpoint'), 100);
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'), 100);
         add_action('wp_footer', array($this, 'render_pending_account_type'), 5);
-        add_filter('woocommerce_checkout_fields', array($this, 'adjust_company_checkout_fields'));
+        add_filter('woocommerce_checkout_fields', array($this, 'adjust_checkout_fields'));
     }
 
     public function account_type()
@@ -66,8 +66,12 @@ final class DeDe_Store_Features
         }
     }
 
-    public function adjust_company_checkout_fields($fields)
+    public function adjust_checkout_fields($fields)
     {
+        if (isset($fields['billing']['billing_email'])) {
+            $fields['billing']['billing_email']['required'] = false;
+        }
+
         if (!is_user_logged_in() || 'company' !== $this->profile->get_account_type(get_current_user_id())) {
             return $fields;
         }
