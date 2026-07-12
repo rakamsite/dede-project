@@ -1,0 +1,93 @@
+.sts-ticket-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.sts-ticket-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.sts-ticket-info-grid .info-item {
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    padding: 10px 12px;
+    background-color: #fff;
+}
+
+.sts-ticket-info-grid .label {
+    display: block;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.sts-ticket-info-grid .value {
+    display: block;
+    margin-top: 6px;
+    color: #2c3338;
+    word-break: break-word;
+}
+
+.sts-ticket-meta p {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+}
+
+.sts-ticket-meta label {
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.sts-ticket-meta input[type="text"],
+.sts-ticket-meta input[type="email"],
+.sts-ticket-meta textarea,
+.sts-ticket-meta select {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 14px;
+}
+
+.sts-ticket-meta textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.sts-ticket-meta a {
+    color: #2271b1;
+    text-decoration: none;
+}
+
+.sts-ticket-meta a:hover {
+    text-decoration: underline;
+}
+
+.sts-responses {
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background-color: #f6f7f7;
+    padding: 12px;
+}
+
+.sts-responses h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.sts-responses p {
+    margin: 0 0 12px;
+    line-height: 1.5;
+}
+
+.sts-ticket-meta select {
+    min-height: 36px;
+}

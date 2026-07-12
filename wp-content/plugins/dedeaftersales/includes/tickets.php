@@ -1,0 +1,1356 @@
+<?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Ticket custom post type registration.
+ */
+function sts_register_ticket_post_type() {
+    $labels = array(
+        'name'               => __('درخواست‌ها', 'simple-ticket'),
+        'singular_name'      => __('درخواست', 'simple-ticket'),
+        'menu_name'          => __('خدمات پس از فروش', 'simple-ticket'),
+        'add_new'            => __('افزودن درخواست', 'simple-ticket'),
+        'add_new_item'       => __('افزودن درخواست جدید', 'simple-ticket'),
+        'edit_item'          => __('ویرایش درخواست', 'simple-ticket'),
+        'new_item'           => __('درخواست جدید', 'simple-ticket'),
+        'view_item'          => __('نمایش درخواست', 'simple-ticket'),
+        'all_items'          => __('همه درخواست‌ها', 'simple-ticket'),
+        'search_items'       => __('جستجوی درخواست‌ها', 'simple-ticket'),
+        'not_found'          => __('درخواستی یافت نشد', 'simple-ticket'),
+    );
+
+    $args = array(
+        'labels'             => $labels,
+        'public'             => false,
+        'show_ui'            => true,
+        'show_in_menu'       => true,
+        'query_var'          => true,
+        'rewrite'            => array('slug' => 'ticket'),
+        'capability_type'    => array('request', 'requests'),
+        'map_meta_cap'       => true,
+        'capabilities'       => array(
+            'edit_post'          => 'edit_request',
+            'read_post'          => 'read_request',
+            'delete_post'        => 'delete_request',
+            'edit_posts'         => 'edit_requests',
+            'edit_others_posts'  => 'edit_others_requests',
+            'publish_posts'      => 'publish_requests',
+            'read_private_posts' => 'read_private_requests',
+            'create_posts'       => 'create_requests',
+        ),
+        'has_archive'        => false,
+        'hierarchical'       => false,
+        'menu_position'      => 20,
+        'supports'           => array('title'),
+    );
+
+    register_post_type('ticket', $args);
+}
+add_action('init', 'sts_register_ticket_post_type');
+
+/**
+ * Settings submenu for ticket configuration.
+ */
+function sts_add_settings_submenu() {
+    add_submenu_page(
+        'edit.php?post_type=ticket',
+        __('تنظیمات درخواست‌ها', 'simple-ticket'),
+        __('تنظیمات', 'simple-ticket'),
+        'manage_options',
+        'ticket-settings',
+        'sts_settings_page'
+    );
+
+    add_submenu_page(
+        'edit.php?post_type=ticket',
+        __('راهنما', 'simple-ticket'),
+        __('راهنما', 'simple-ticket'),
+        'manage_options',
+        'ticket-guide',
+        'sts_guide_page'
+    );
+
+    add_submenu_page(
+        'edit.php?post_type=ticket',
+        __('بروزرسانی‌ها', 'simple-ticket'),
+        __('بروزرسانی‌ها', 'simple-ticket'),
+        'manage_options',
+        'ticket-updates',
+        'sts_updates_page'
+    );
+}
+add_action('admin_menu', 'sts_add_settings_submenu');
+
+
+/**
+ * Keep after-sales submenus in the intended order.
+ */
+function sts_reorder_after_sales_submenus() {
+    global $submenu;
+
+    $parent_slug = 'edit.php?post_type=ticket';
+    if (!isset($submenu[$parent_slug]) || !is_array($submenu[$parent_slug])) {
+        return;
+    }
+
+    $desired_order = array(
+        'edit.php?post_type=ticket',
+        'post-new.php?post_type=ticket',
+        'ticket-settings',
+        'edit.php?post_type=warranty',
+        'post-new.php?post_type=warranty',
+        'warranty-settings',
+        'ticket-guide',
+        'ticket-updates',
+    );
+
+    $existing = array();
+    foreach ($submenu[$parent_slug] as $item) {
+        if (isset($item[2])) {
+            $existing[$item[2]] = $item;
+        }
+    }
+
+    $ordered = array();
+    foreach ($desired_order as $slug) {
+        if (isset($existing[$slug])) {
+            $ordered[] = $existing[$slug];
+            unset($existing[$slug]);
+        }
+    }
+
+    foreach ($existing as $item) {
+        $ordered[] = $item;
+    }
+
+    $submenu[$parent_slug] = $ordered;
+}
+add_action('admin_menu', 'sts_reorder_after_sales_submenus', 999);
+
+/**
+ * Changelog entries shown in the plugin updates page.
+ *
+ * IMPORTANT: Add a new version entry only when the user explicitly asks
+ * to "ثبت لاگ" for that version.
+ *
+ * @return array<string,array<int,string>>
+ */
+function sts_get_updates_log_entries() {
+    return array(
+        '1.3' => array(
+            'افزودن پیام راهنمای ورود/ثبت‌نام برای کاربران واردنشده در بخش فعال‌سازی گارانتی.',
+            'نمایش دکمه «ورود به حساب کاربری» در فرم فعال‌سازی گارانتی برای کاربران مهمان، مشابه بخش ثبت درخواست‌ها.',
+            'جلوگیری از نمایش فرم فعال‌سازی گارانتی برای کاربران مهمان تا زمان ورود به حساب کاربری.',
+            'حذف فیلدهای نام بهره‌بردار، شماره همراه بهره‌بردار و ایمیل بهره‌بردار از بخش اطلاعات گارانتی هنگام انتخاب ابزار آلات.',
+            'تبدیل فیلد کد هولوگرام طلایی به ۶ باکس مربعی تک‌رقمی با تکمیل خودکار کد نهایی.',
+            'حذف عنوان‌های بخش‌های انتخاب محصول، نوع محصول، اطلاعات هولوگرام، اطلاعات گارانتی و تأیید نهایی از فرم فعال‌سازی گارانتی.',
+        ),
+        '1.2.1' => array(
+            'بازطراحی ستون‌های لیست درخواست‌ها با حذف عبارت‌های پیش‌فرض تاریخ و افزودن نمایش مستقیم اطلاعات کاربردی.',
+            'افزودن ستون وضعیت برای نمایش وضعیت واقعی هر تیکت در لیست مدیریت.',
+            'افزودن ستون ثبت‌کننده و ستون شماره سفارش یا فاکتور در لیست همه درخواست‌ها.',
+            'افزودن فیلتر جستجو در صفحه همه درخواست‌ها بر اساس ثبت‌کننده و شماره سفارش یا فاکتور.',
+            'حذف گزینه ویرایش سریع از عملیات هر ردیف برای ساده‌سازی مدیریت درخواست‌ها.',
+            'یکپارچه‌سازی منوی درخواست‌ها و گارانتی در بخش «خدمات پس از فروش» برای دسترسی متمرکز در پنل ادمین.',
+            'افزودن صفحه «راهنما» شامل راهنمای استفاده و راهنمای توسعه افزونه.',
+        ),
+        '1.2' => array(
+            'بازطراحی مدیریت درخواست‌ها در پنل ادمین با تمرکز بر وضعیت‌های واقعی تیکت.',
+            'خودکارسازی تغییر وضعیت‌ها در سناریوهای پاسخ ادمین و پاسخ مجدد کاربر.',
+            'افزودن صفحه بروزرسانی‌ها برای نمایش تاریخچه تغییرات انجام‌شده در نسخه‌ها.',
+            'بهبود عناوین و دسترسی‌های مدیریتی برای مشاهده سریع‌تر جزئیات درخواست‌ها.',
+        ),
+    );
+}
+
+/**
+ * Render plugin updates page.
+ */
+function sts_updates_page() {
+    $logs = sts_get_updates_log_entries();
+    ?>
+    <div class="wrap">
+        <h1><?php _e('بروزرسانی‌ها', 'simple-ticket'); ?></h1>
+        <p><?php _e('تاریخچه تغییرات افزونه در این بخش نمایش داده می‌شود.', 'simple-ticket'); ?></p>
+
+        <?php foreach ($logs as $version => $items) : ?>
+            <div class="card" style="max-width:900px;padding:16px;margin-top:16px;">
+                <h2 style="margin-top:0;"><?php echo esc_html(sprintf(__('نسخه %s', 'simple-ticket'), $version)); ?></h2>
+                <ul style="list-style:disc;padding-right:20px;">
+                    <?php foreach ($items as $item) : ?>
+                        <li><?php echo esc_html($item); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endforeach; ?>
+    </div>
+    <?php
+}
+
+/**
+ * Render plugin guide page.
+ */
+function sts_guide_page() {
+    ?>
+    <div class="wrap">
+        <h1><?php _e('راهنما', 'simple-ticket'); ?></h1>
+
+        <div class="card" style="max-width:900px;padding:16px;margin-top:16px;">
+            <h2 style="margin-top:0;"><?php _e('راهنمای استفاده', 'simple-ticket'); ?></h2>
+            <ol style="list-style:decimal;padding-right:20px;line-height:1.9;">
+                <li><?php _e('برای ثبت درخواست جدید، از منوی «خدمات پس از فروش» وارد «افزودن درخواست» شوید و فرم را کامل کنید.', 'simple-ticket'); ?></li>
+                <li><?php _e('برای بررسی درخواست‌ها، از بخش «درخواست‌ها» لیست همه درخواست‌ها را مشاهده و وضعیت آن‌ها را مدیریت کنید.', 'simple-ticket'); ?></li>
+                <li><?php _e('برای ثبت یا مشاهده گارانتی‌ها، از گزینه‌های «گارانتی‌ها» و «افزودن گارانتی» استفاده کنید.', 'simple-ticket'); ?></li>
+                <li><?php _e('تنظیمات ایمیل پشتیبانی از بخش «تنظیمات درخواست‌ها» و تصویر نمونه هولوگرام از «تنظیمات گارانتی» قابل مدیریت است.', 'simple-ticket'); ?></li>
+            </ol>
+        </div>
+
+        <div class="card" style="max-width:900px;padding:16px;margin-top:16px;">
+            <h2 style="margin-top:0;"><?php _e('راهنمای توسعه افزونه', 'simple-ticket'); ?></h2>
+            <ul style="list-style:disc;padding-right:20px;line-height:1.9;">
+                <li><?php _e('هسته افزونه در فایل `simple-ticket-system.php` بارگذاری می‌شود و فایل‌های عملکردی در پوشه `includes` قرار دارند.', 'simple-ticket'); ?></li>
+                <li><?php _e('منطق درخواست‌ها در `includes/tickets.php` و منطق گارانتی در `includes/warranty.php` توسعه داده می‌شود.', 'simple-ticket'); ?></li>
+                <li><?php _e('برای تغییر رابط کاربری فرم‌ها از قالب‌های پوشه `templates` و فایل‌های CSS/JS در پوشه `assets` استفاده کنید.', 'simple-ticket'); ?></li>
+                <li><?php _e('برای ثبت تغییرات نسخه، بخش لاگ بروزرسانی‌ها را در تابع `sts_get_updates_log_entries` بروزرسانی کنید.', 'simple-ticket'); ?></li>
+            </ul>
+        </div>
+    </div>
+    <?php
+}
+
+function sts_settings_page() {
+    if (isset($_POST['submit'])) {
+        update_option('sts_admin_email', sanitize_email($_POST['admin_email']));
+        echo '<div class="notice notice-success"><p>' . __('تنظیمات با موفقیت ذخیره شد.', 'simple-ticket') . '</p></div>';
+    }
+
+    $admin_email = get_option('sts_admin_email', get_option('admin_email'));
+    ?>
+    <div class="wrap">
+        <h1><?php _e('تنظیمات درخواست‌ها', 'simple-ticket'); ?></h1>
+        <form method="post">
+            <table class="form-table">
+                <tr>
+                    <th scope="row">
+                        <label for="admin_email"><?php _e('ایمیل واحد پشتیبانی برای نوتیفیکیشن:', 'simple-ticket'); ?></label>
+                    </th>
+                    <td>
+                        <input type="email" id="admin_email" name="admin_email" value="<?php echo esc_attr($admin_email); ?>" class="regular-text" />
+                        <p class="description"><?php _e('ایمیل‌های نوتیفیکیشن درخواست‌های جدید به این آدرس ارسال می‌شود.', 'simple-ticket'); ?></p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button(); ?>
+        </form>
+    </div>
+    <?php
+}
+
+/**
+ * Ticket meta box registration.
+ */
+function sts_add_ticket_meta_box() {
+    add_meta_box(
+        'ticket_details',
+        __('جزئیات درخواست', 'simple-ticket'),
+        'sts_render_ticket_meta_box',
+        'ticket',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'sts_add_ticket_meta_box');
+
+/**
+ * Customize submit button text for ticket post type.
+ */
+function sts_customize_ticket_submit_button($translation, $text, $domain) {
+    if (!is_admin() || !function_exists('get_current_screen')) {
+        return $translation;
+    }
+
+    $screen = get_current_screen();
+    if ($screen && $screen->post_type === 'ticket' && ($text === 'Update' || $translation === 'بروزرسانی' || $translation === 'به‌روزرسانی')) {
+        return __('ارسال پاسخ', 'simple-ticket');
+    }
+
+    return $translation;
+}
+add_filter('gettext', 'sts_customize_ticket_submit_button', 10, 3);
+
+/**
+ * Enqueue admin assets for ticket post type.
+ */
+function sts_enqueue_admin_ticket_assets($hook) {
+    $screen = get_current_screen();
+
+    if ($screen && $screen->post_type === 'ticket') {
+        wp_enqueue_style(
+            'sts-admin-ticket',
+            plugin_dir_url(STS_PLUGIN_FILE) . 'assets/css/admin-ticket.css',
+            array(),
+            '1.0'
+        );
+    }
+}
+add_action('admin_enqueue_scripts', 'sts_enqueue_admin_ticket_assets');
+
+/**
+ * Rename admin row action label from edit to view for tickets.
+ */
+function sts_customize_ticket_row_actions($actions, $post) {
+    if (!is_admin() || !$post || $post->post_type !== 'ticket') {
+        return $actions;
+    }
+
+    if (isset($actions['edit'])) {
+        $actions['edit'] = str_replace(__('ویرایش', 'simple-ticket'), __('نمایش', 'simple-ticket'), $actions['edit']);
+    }
+
+    if (isset($actions['inline hide-if-no-js'])) {
+        unset($actions['inline hide-if-no-js']);
+    }
+
+    return $actions;
+}
+add_filter('post_row_actions', 'sts_customize_ticket_row_actions', 10, 2);
+
+/**
+ * Customize ticket columns in admin list table.
+ */
+function sts_customize_ticket_columns($columns) {
+    if (!is_array($columns)) {
+        return $columns;
+    }
+
+    $new_columns = array();
+
+    if (isset($columns['cb'])) {
+        $new_columns['cb'] = $columns['cb'];
+    }
+
+    $new_columns['title']              = __('شماره درخواست', 'simple-ticket');
+    $new_columns['ticket_submitter']   = __('ثبت‌کننده', 'simple-ticket');
+    $new_columns['ticket_order_number'] = __('شماره سفارش یا فاکتور', 'simple-ticket');
+    $new_columns['ticket_status']      = __('وضعیت', 'simple-ticket');
+    $new_columns['ticket_date']        = __('تاریخ', 'simple-ticket');
+
+    return $new_columns;
+}
+add_filter('manage_ticket_posts_columns', 'sts_customize_ticket_columns');
+
+/**
+ * Render custom ticket columns values in admin list table.
+ */
+function sts_render_ticket_columns($column, $post_id) {
+    if ($column === 'ticket_submitter') {
+        $user_id    = (int) get_post_meta($post_id, 'user_id', true);
+        $user       = $user_id ? get_userdata($user_id) : false;
+        $first_name = $user_id ? get_user_meta($user_id, 'first_name', true) : '';
+        $last_name  = $user_id ? get_user_meta($user_id, 'last_name', true) : '';
+        $full_name  = trim($first_name . ' ' . $last_name);
+
+        if ($full_name === '' && $user) {
+            $full_name = $user->display_name;
+        }
+
+        echo esc_html($full_name !== '' ? $full_name : __('نامشخص', 'simple-ticket'));
+        return;
+    }
+
+    if ($column === 'ticket_order_number') {
+        $order_number = get_post_meta($post_id, 'order_number', true);
+        echo esc_html($order_number !== '' ? $order_number : '—');
+        return;
+    }
+
+    if ($column === 'ticket_status') {
+        $ticket_status = get_post_meta($post_id, 'ticket_status', true);
+        $statuses      = array(
+            'new'       => __('جدید', 'simple-ticket'),
+            'reviewed'  => __('بررسی شده', 'simple-ticket'),
+            'responded' => __('پاسخ داده شده', 'simple-ticket'),
+            'closed'    => __('بسته شده', 'simple-ticket'),
+        );
+
+        echo esc_html($statuses[$ticket_status] ?? __('نامشخص', 'simple-ticket'));
+        return;
+    }
+
+    if ($column === 'ticket_date') {
+        $date = get_the_date('Y/m/d H:i', $post_id);
+        echo esc_html($date !== '' ? $date : '—');
+    }
+}
+add_action('manage_ticket_posts_custom_column', 'sts_render_ticket_columns', 10, 2);
+
+/**
+ * Replace ticket list tabs with status-based tabs.
+ */
+function sts_ticket_admin_views($views) {
+    global $typenow;
+
+    if ($typenow !== 'ticket') {
+        return $views;
+    }
+
+    $statuses = array(
+        'new'       => __('جدید', 'simple-ticket'),
+        'reviewed'  => __('بررسی شده', 'simple-ticket'),
+        'responded' => __('پاسخ داده شده', 'simple-ticket'),
+        'closed'    => __('بسته شده', 'simple-ticket'),
+    );
+
+    $counts = array();
+    foreach (array_keys($statuses) as $status_key) {
+        $query = new WP_Query(array(
+            'post_type'      => 'ticket',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'fields'         => 'ids',
+            'meta_key'       => 'ticket_status',
+            'meta_value'     => $status_key,
+        ));
+        $counts[$status_key] = (int) $query->found_posts;
+    }
+
+    $current_status = isset($_GET['ticket_status']) ? sanitize_key(wp_unslash($_GET['ticket_status'])) : 'new';
+    if (!isset($statuses[$current_status])) {
+        $current_status = 'new';
+    }
+
+    $base_url  = admin_url('edit.php?post_type=ticket');
+    $new_views = array();
+
+    foreach ($statuses as $status_key => $status_label) {
+        $class = $current_status === $status_key ? ' class="current" aria-current="page"' : '';
+        $url   = esc_url(add_query_arg('ticket_status', $status_key, $base_url));
+        $count = isset($counts[$status_key]) ? $counts[$status_key] : 0;
+
+        $new_views[$status_key] = sprintf(
+            '<a href="%1$s"%2$s>%3$s <span class="count">(%4$d)</span></a>',
+            $url,
+            $class,
+            esc_html($status_label),
+            $count
+        );
+    }
+
+    return $new_views;
+}
+add_filter('views_edit-ticket', 'sts_ticket_admin_views');
+
+/**
+ * Render ticket-specific filters in admin list table.
+ */
+function sts_render_ticket_admin_filters($post_type) {
+    if ($post_type !== 'ticket') {
+        return;
+    }
+
+    $submitter_keyword = isset($_GET['ticket_submitter']) ? sanitize_text_field(wp_unslash($_GET['ticket_submitter'])) : '';
+    $order_number      = isset($_GET['ticket_order_number']) ? sanitize_text_field(wp_unslash($_GET['ticket_order_number'])) : '';
+    ?>
+    <input
+        type="search"
+        name="ticket_submitter"
+        value="<?php echo esc_attr($submitter_keyword); ?>"
+        placeholder="<?php esc_attr_e('جستجو بر اساس ثبت‌کننده', 'simple-ticket'); ?>"
+    />
+    <input
+        type="search"
+        name="ticket_order_number"
+        value="<?php echo esc_attr($order_number); ?>"
+        placeholder="<?php esc_attr_e('جستجو بر اساس شماره سفارش یا فاکتور', 'simple-ticket'); ?>"
+    />
+    <?php
+}
+add_action('restrict_manage_posts', 'sts_render_ticket_admin_filters');
+
+/**
+ * Filter ticket list by selected status tab.
+ */
+function sts_filter_ticket_admin_query($query) {
+    if (!is_admin() || !$query->is_main_query()) {
+        return;
+    }
+
+    $post_type = $query->get('post_type');
+    if ($post_type !== 'ticket') {
+        return;
+    }
+
+    $statuses      = array('new', 'reviewed', 'responded', 'closed');
+    $status_filter = isset($_GET['ticket_status']) ? sanitize_key(wp_unslash($_GET['ticket_status'])) : 'new';
+    if (!in_array($status_filter, $statuses, true)) {
+        $status_filter = 'new';
+    }
+
+    $meta_query = array(
+        'relation' => 'AND',
+        array(
+            'key'   => 'ticket_status',
+            'value' => $status_filter,
+        ),
+    );
+
+    $order_number = isset($_GET['ticket_order_number']) ? sanitize_text_field(wp_unslash($_GET['ticket_order_number'])) : '';
+    if ($order_number !== '') {
+        $meta_query[] = array(
+            'key'     => 'order_number',
+            'value'   => $order_number,
+            'compare' => 'LIKE',
+        );
+    }
+
+    $submitter_keyword = isset($_GET['ticket_submitter']) ? sanitize_text_field(wp_unslash($_GET['ticket_submitter'])) : '';
+    if ($submitter_keyword !== '') {
+        $matched_by_profile = get_users(array(
+            'fields'         => 'ids',
+            'search'         => '*' . $submitter_keyword . '*',
+            'search_columns' => array('display_name', 'user_login', 'user_email'),
+        ));
+
+        $matched_by_name = get_users(array(
+            'fields'     => 'ids',
+            'meta_query' => array(
+                'relation' => 'OR',
+                array(
+                    'key'     => 'first_name',
+                    'value'   => $submitter_keyword,
+                    'compare' => 'LIKE',
+                ),
+                array(
+                    'key'     => 'last_name',
+                    'value'   => $submitter_keyword,
+                    'compare' => 'LIKE',
+                ),
+            ),
+        ));
+
+        $matched_users = array_unique(array_merge($matched_by_profile, $matched_by_name));
+
+        if (empty($matched_users)) {
+            $query->set('post__in', array(0));
+        } else {
+            $meta_query[] = array(
+                'key'     => 'user_id',
+                'value'   => array_map('strval', $matched_users),
+                'compare' => 'IN',
+            );
+        }
+    }
+
+    $query->set('meta_query', $meta_query);
+}
+add_action('pre_get_posts', 'sts_filter_ticket_admin_query');
+
+/**
+ * Mark new ticket as reviewed on first admin open.
+ */
+function sts_mark_ticket_reviewed_on_first_open() {
+    if (!is_admin() || !isset($_GET['post'], $_GET['action']) || $_GET['action'] !== 'edit') {
+        return;
+    }
+
+    $post_id = intval($_GET['post']);
+    if (!$post_id || get_post_type($post_id) !== 'ticket') {
+        return;
+    }
+
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    $ticket_status = get_post_meta($post_id, 'ticket_status', true);
+    if ($ticket_status === 'new') {
+        update_post_meta($post_id, 'ticket_status', 'reviewed');
+    }
+}
+add_action('load-post.php', 'sts_mark_ticket_reviewed_on_first_open');
+
+function sts_render_ticket_meta_box($post) {
+    wp_nonce_field('sts_save_ticket_meta', 'ticket_meta_nonce');
+    $ticket_number      = get_post_meta($post->ID, 'ticket_number', true);
+    $order_number       = get_post_meta($post->ID, 'order_number', true);
+    $order_date         = get_post_meta($post->ID, 'order_date', true);
+    $issue_items        = get_post_meta($post->ID, 'issue_items', true) ?: array();
+    if (empty($issue_items)) {
+        $legacy_issue_type        = get_post_meta($post->ID, 'issue_type', true);
+        $legacy_issue_description = get_post_meta($post->ID, 'issue_description', true);
+        $legacy_attachment        = get_post_meta($post->ID, 'attachment', true);
+
+        if ($legacy_issue_type || $legacy_issue_description || $legacy_attachment) {
+            $issue_items = array(
+                array(
+                    'product_name'      => '',
+                    'quantity'          => '',
+                    'issue_type'        => $legacy_issue_type,
+                    'issue_description' => $legacy_issue_description,
+                    'attachment'        => $legacy_attachment,
+                ),
+            );
+        }
+    }
+    $issue_description  = get_post_meta($post->ID, 'issue_description', true);
+    $responses          = get_post_meta($post->ID, 'responses', true) ?: array();
+    $ticket_status      = get_post_meta($post->ID, 'ticket_status', true);
+
+    $user_id       = get_post_meta($post->ID, 'user_id', true);
+    $user          = get_userdata($user_id);
+    $first_name    = get_user_meta($user_id, 'first_name', true);
+    $last_name     = get_user_meta($user_id, 'last_name', true);
+    $user_fullname = trim($first_name . ' ' . $last_name);
+    if (empty($user_fullname)) {
+        $user_fullname = $user ? $user->user_login : 'کاربر';
+    }
+    ?>
+    <div class="sts-ticket-meta">
+        <div class="sts-ticket-info-grid">
+            <div class="info-item">
+                <span class="label"><?php _e('شماره درخواست', 'simple-ticket'); ?></span>
+                <span class="value"><?php echo esc_html($ticket_number); ?></span>
+            </div>
+            <div class="info-item">
+                <span class="label"><?php _e('ثبت‌کننده', 'simple-ticket'); ?></span>
+                <span class="value"><?php echo esc_html($user_fullname); ?></span>
+            </div>
+            <div class="info-item">
+                <span class="label"><?php _e('شماره سفارش یا فاکتور', 'simple-ticket'); ?></span>
+                <span class="value"><?php echo esc_html($order_number); ?></span>
+            </div>
+            <div class="info-item">
+                <span class="label"><?php _e('تاریخ دریافت سفارش', 'simple-ticket'); ?></span>
+                <span class="value"><?php echo esc_html($order_date); ?></span>
+            </div>
+        </div>
+
+        <div class="sts-ticket-summary">
+            <p>
+                <?php
+                printf(
+                    /* translators: 1: ticket number, 2: user full name, 3: order number, 4: order date, 5: issues count */
+                    __('این درخواست به شماره %1$s توسط %2$s برای شماره سفارش %3$s که در تاریخ %4$s دریافت شده ثبت شده است. این درخواست شامل %5$s مورد مشکل ثبت‌شده است.', 'simple-ticket'),
+                    esc_html($ticket_number),
+                    esc_html($user_fullname),
+                    esc_html($order_number),
+                    esc_html($order_date),
+                    esc_html(count($issue_items))
+                );
+                ?>
+            </p>
+        </div>
+
+        <?php if (!empty($issue_items)) : ?>
+            <table class="widefat striped" style="margin-top:10px">
+                <thead>
+                    <tr>
+                        <th><?php _e('نام محصول', 'simple-ticket'); ?></th>
+                        <th><?php _e('تعداد', 'simple-ticket'); ?></th>
+                        <th><?php _e('نوع مشکل', 'simple-ticket'); ?></th>
+                        <th><?php _e('شرح مشکل', 'simple-ticket'); ?></th>
+                        <th><?php _e('ضمیمه', 'simple-ticket'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($issue_items as $item) : ?>
+                        <tr>
+                            <td><?php echo esc_html($item['product_name'] ?? ''); ?></td>
+                            <td><?php echo esc_html($item['quantity'] ?? ''); ?></td>
+                            <td><?php echo esc_html($item['issue_type'] ?? ''); ?></td>
+                            <td><?php echo esc_html($item['issue_description'] ?? ''); ?></td>
+                            <td>
+                                <?php if (!empty($item['attachment'])) : ?>
+                                    <a href="<?php echo esc_url($item['attachment']); ?>" target="_blank"><?php _e('دانلود', 'simple-ticket'); ?></a>
+                                <?php else : ?>
+                                    <?php _e('بدون فایل', 'simple-ticket'); ?>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+        <div class="sts-responses">
+            <?php foreach ($responses as $response) : ?>
+                <p><strong><?php echo esc_html($response['author'] === 'admin' ? 'واحد پشتیبانی' : $user_fullname); ?> (<?php echo esc_html($response['date']); ?>):</strong><br><?php echo esc_textarea($response['message']); ?></p>
+            <?php endforeach; ?>
+        </div>
+
+        <p><label><?php _e('واحد پشتیبانی:', 'simple-ticket'); ?></label><textarea name="admin_response"></textarea></p>
+        <p><label><?php _e('وضعیت درخواست:', 'simple-ticket'); ?></label>
+            <select name="ticket_status">
+                <option value="new" <?php selected($ticket_status, 'new'); ?>><?php _e('جدید', 'simple-ticket'); ?></option>
+                <option value="reviewed" <?php selected($ticket_status, 'reviewed'); ?>><?php _e('بررسی شده', 'simple-ticket'); ?></option>
+                <option value="responded" <?php selected($ticket_status, 'responded'); ?>><?php _e('پاسخ داده شده', 'simple-ticket'); ?></option>
+                <option value="closed" <?php selected($ticket_status, 'closed'); ?>><?php _e('بسته شده', 'simple-ticket'); ?></option>
+            </select>
+        </p>
+    </div>
+    <?php
+}
+
+/**
+ * Save ticket meta.
+ */
+function sts_save_ticket_meta($post_id) {
+    if (!isset($_POST['ticket_meta_nonce']) || !wp_verify_nonce($_POST['ticket_meta_nonce'], 'sts_save_ticket_meta')) {
+        return;
+    }
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    $responses              = get_post_meta($post_id, 'responses', true) ?: array();
+    $admin_response_submitted = false;
+    if (isset($_POST['admin_response']) && !empty($_POST['admin_response'])) {
+        $admin_response = sanitize_textarea_field($_POST['admin_response']);
+        $responses[]    = array(
+            'author' => 'admin',
+            'date'   => current_time('Y-m-d H:i:s'),
+            'message'=> $admin_response,
+        );
+        update_post_meta($post_id, 'responses', $responses);
+        $admin_response_submitted = true;
+
+        $ticket_status = get_post_meta($post_id, 'ticket_status', true);
+        if ($admin_response && $ticket_status !== 'closed') {
+            update_post_meta($post_id, 'ticket_status', 'responded');
+            $user_id = get_post_meta($post_id, 'user_id', true);
+            $user    = get_userdata($user_id);
+            if ($user) {
+                $message = sts_build_ticket_notification_message($post_id, array(
+                    'type'           => 'admin_response',
+                    'status'         => __('پاسخ داده شده', 'simple-ticket'),
+                    'admin_response' => $admin_response,
+                ));
+                sts_send_ticket_notification($post_id, $message);
+            }
+        }
+    }
+
+    if ($admin_response_submitted) {
+        $_POST['ticket_status'] = 'responded';
+    }
+
+    if (isset($_POST['ticket_status'])) {
+        $new_status = sanitize_text_field($_POST['ticket_status']);
+        $old_status = get_post_meta($post_id, 'ticket_status', true);
+        if ($new_status !== $old_status) {
+            update_post_meta($post_id, 'ticket_status', $new_status);
+            $user_id = get_post_meta($post_id, 'user_id', true);
+            $user    = get_userdata($user_id);
+            if ($user) {
+                $statuses = array(
+                    'new'       => __('جدید', 'simple-ticket'),
+                    'reviewed'  => __('بررسی شده', 'simple-ticket'),
+                    'responded' => __('پاسخ داده شده', 'simple-ticket'),
+                    'closed'    => __('بسته شده', 'simple-ticket'),
+                );
+                $message = sts_build_ticket_notification_message($post_id, array(
+                    'type'   => 'status_change',
+                    'status' => $statuses[$new_status],
+                ));
+                sts_send_ticket_notification($post_id, $message);
+            }
+        }
+    }
+}
+add_action('save_post', 'sts_save_ticket_meta');
+
+/**
+ * Send a unified ticket notification to admin and user.
+ *
+ * @param int    $ticket_id Ticket ID.
+ * @param string $message   Message body.
+ * @return void
+ */
+function sts_send_ticket_notification($ticket_id, $message) {
+    $ticket_number = get_post_meta($ticket_id, 'ticket_number', true);
+    $subject       = $ticket_number;
+
+    $admin_email = get_option('sts_admin_email', get_option('admin_email'));
+    $user_id     = get_post_meta($ticket_id, 'user_id', true);
+    $user        = get_userdata($user_id);
+
+    $recipients = array_filter(array(
+        $admin_email,
+        $user ? $user->user_email : '',
+    ));
+    $recipients = array_unique($recipients);
+
+    $headers = array('Content-Type: text/html; charset=UTF-8');
+
+    foreach ($recipients as $recipient) {
+        wp_mail($recipient, $subject, $message, $headers);
+    }
+}
+
+/**
+ * Build a unified ticket notification email message.
+ *
+ * @param int   $ticket_id Ticket ID.
+ * @param array $context   Context details.
+ * @return string
+ */
+function sts_build_ticket_notification_message($ticket_id, $context = array()) {
+    $order_number  = get_post_meta($ticket_id, 'order_number', true);
+    $issue_items   = get_post_meta($ticket_id, 'issue_items', true) ?: array();
+    $responses     = get_post_meta($ticket_id, 'responses', true) ?: array();
+
+    $user_id    = get_post_meta($ticket_id, 'user_id', true);
+    $user       = get_userdata($user_id);
+    $first_name = get_user_meta($user_id, 'first_name', true);
+    $last_name  = get_user_meta($user_id, 'last_name', true);
+    $full_name  = trim($first_name . ' ' . $last_name);
+    if (empty($full_name)) {
+        $full_name = $user ? $user->user_login : __('کاربر', 'simple-ticket');
+    }
+
+    $card_style        = 'background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(15,23,42,0.06);';
+    $item_box_style    = 'background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px;';
+    $response_box      = 'border-right:3px solid #38bdf8;background:#f0f9ff;padding:12px;border-radius:10px;margin-bottom:10px;';
+    $response_meta     = 'font-size:12px;color:#475569;margin-bottom:6px;';
+    $response_message  = 'font-size:14px;color:#0f172a;margin:0;white-space:pre-wrap;';
+
+    $issue_rows  = '';
+    foreach ($issue_items as $item) {
+        $product_name = esc_html($item['product_name'] ?? '');
+        $quantity     = esc_html($item['quantity'] ?? '');
+        $issue_type   = esc_html($item['issue_type'] ?? '');
+        $description  = esc_html($item['issue_description'] ?? '');
+        $attachment   = !empty($item['attachment']) ? esc_url($item['attachment']) : '';
+        $attachment_link = $attachment ? sprintf('<a href="%s" style="color:#2563eb;text-decoration:none;">%s</a>', $attachment, esc_html__('دانلود ضمیمه', 'simple-ticket')) : esc_html__('بدون فایل', 'simple-ticket');
+
+        $issue_rows .= sprintf(
+            '<div style="%1$s">
+                <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#0f172a;">%2$s</p>
+                <p style="margin:0;font-size:13px;color:#64748b;">%3$s: %4$s | %5$s: %6$s</p>
+                <p style="margin:8px 0 0;font-size:13px;color:#475569;">%7$s</p>
+                <p style="margin:8px 0 0;font-size:13px;">%8$s</p>
+            </div>',
+            $item_box_style,
+            $product_name,
+            esc_html__('تعداد', 'simple-ticket'),
+            $quantity,
+            esc_html__('نوع مشکل', 'simple-ticket'),
+            $issue_type,
+            $description,
+            $attachment_link
+        );
+    }
+
+    if ($issue_rows === '') {
+        $issue_rows = sprintf('<p style="margin:0;font-size:14px;color:#64748b;">%s</p>', esc_html__('موردی ثبت نشده است.', 'simple-ticket'));
+    }
+
+    $responses_html = '';
+    if (!empty($responses)) {
+        foreach ($responses as $response) {
+            $author_label = $response['author'] === 'admin' ? __('واحد پشتیبانی', 'simple-ticket') : $full_name;
+            $date_label   = $response['date'] ?? '';
+            $message_text = $response['message'] ?? '';
+
+            $responses_html .= sprintf(
+                '<div style="%1$s">
+                    <div style="%2$s">%3$s | %4$s</div>
+                    <p style="%5$s">%6$s</p>
+                </div>',
+                $response_box,
+                $response_meta,
+                esc_html($author_label),
+                esc_html($date_label),
+                $response_message,
+                esc_html($message_text)
+            );
+        }
+    } else {
+        $responses_html = sprintf('<p style="margin:0;font-size:14px;color:#64748b;">%s</p>', esc_html__('هنوز پاسخی ثبت نشده است.', 'simple-ticket'));
+    }
+
+    $highlight_block = '';
+    if (!empty($context['admin_response'])) {
+        $highlight_block .= sprintf(
+            '<div style="%1$s">
+                <div style="%2$s">%3$s</div>
+                <p style="%4$s">%5$s</p>
+            </div>',
+            $response_box,
+            $response_meta,
+            esc_html__('آخرین واحد پشتیبانی', 'simple-ticket'),
+            $response_message,
+            esc_html($context['admin_response'])
+        );
+    }
+    if (!empty($context['user_response'])) {
+        $highlight_block .= sprintf(
+            '<div style="%1$s">
+                <div style="%2$s">%3$s</div>
+                <p style="%4$s">%5$s</p>
+            </div>',
+            $response_box,
+            $response_meta,
+            esc_html__('آخرین پاسخ کاربر', 'simple-ticket'),
+            $response_message,
+            esc_html($context['user_response'])
+        );
+    }
+
+    $html = sprintf(
+        '<div dir="rtl" style="background:#f8fafc;padding:24px;font-family:%s;">
+            <div style="max-width:720px;margin:0 auto;%s">
+                <div style="margin-bottom:20px;">
+                    <div style="background:#f1f5f9;border-radius:10px;padding:12px;margin-bottom:12px;">
+                        <p style="margin:0 0 6px;">%s</p>
+                        <p style="margin:0;">%s</p>
+                    </div>
+                    <div style="background:#f1f5f9;border-radius:10px;padding:12px;">
+                        <p style="margin:0 0 6px;">%s</p>
+                        <p style="margin:0;">%s</p>
+                    </div>
+                </div>
+
+                %s
+
+                <div style="margin-top:20px;">
+                    <p>%s</p>
+                    %s
+                </div>
+
+                <div style="margin-top:20px;">
+                    <p>%s</p>
+                    %s
+                </div>
+
+                <div style="margin-top:20px;text-align:center;font-size:12px;color:#94a3b8;">
+                    %s
+                </div>
+            </div>
+        </div>',
+        "'Vazirmatn','IRANSans','Segoe UI',Tahoma,sans-serif",
+        $card_style,
+        esc_html__('ثبت‌کننده', 'simple-ticket'),
+        esc_html($full_name),
+        esc_html__('شماره سفارش/فاکتور', 'simple-ticket'),
+        esc_html($order_number),
+        $highlight_block,
+        esc_html__('جزئیات مشکلات ثبت‌شده', 'simple-ticket'),
+        $issue_rows,
+        esc_html__('تاریخچه گفتگو', 'simple-ticket'),
+        $responses_html,
+        esc_html__('این ایمیل توسط سیستم خدمات پس از فروش سایت DeDe.ir ارسال گردیده است.', 'simple-ticket')
+    );
+
+    return $html;
+}
+
+/**
+ * Store ticket attachments outside of the WordPress media library.
+ *
+ * @param array $dirs Upload directory data.
+ * @return array
+ */
+function sts_ticket_upload_dir($dirs) {
+    $ticket_id = $GLOBALS['sts_current_ticket_id'] ?? 0;
+    $ticket_id = intval($ticket_id);
+    $subdir    = $ticket_id ? '/ticket-attachments/' . $ticket_id : '/ticket-attachments';
+
+    $dirs['subdir'] = $subdir;
+    $dirs['path']   = $dirs['basedir'] . $subdir;
+    $dirs['url']    = $dirs['baseurl'] . $subdir;
+
+    return $dirs;
+}
+
+/**
+ * Handle front-end ticket submissions.
+ */
+function sts_is_ticket_ajax_request() {
+    if (isset($_POST['sts_ajax']) && $_POST['sts_ajax'] === '1') {
+        return true;
+    }
+
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        return true;
+    }
+
+    return false;
+}
+
+function sts_handle_ticket_submission() {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST)) {
+        return;
+    }
+
+    if (isset($_POST['ticket_nonce']) && wp_verify_nonce($_POST['ticket_nonce'], 'submit_ticket')) {
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        $order_number        = isset($_POST['order_number']) ? preg_replace('/\D+/', '', (string) $_POST['order_number']) : '';
+        $order_date          = sanitize_text_field($_POST['order_date']);
+
+        $product_names       = isset($_POST['product_name']) && is_array($_POST['product_name']) ? array_map('sanitize_text_field', $_POST['product_name']) : array();
+        $quantities          = isset($_POST['quantity']) && is_array($_POST['quantity']) ? array_map('intval', $_POST['quantity']) : array();
+        $issue_types         = isset($_POST['issue_type']) && is_array($_POST['issue_type']) ? array_map('sanitize_text_field', $_POST['issue_type']) : array();
+        $issue_descriptions  = isset($_POST['issue_description']) && is_array($_POST['issue_description']) ? array_map('sanitize_textarea_field', $_POST['issue_description']) : array();
+
+        $allowed_file_types  = array('image/jpeg', 'image/png', 'image/gif');
+        $attachments         = $_FILES['attachment'] ?? array();
+        $issue_items         = array();
+        $collected_files     = array();
+        $validation_error    = '';
+
+        foreach ($product_names as $index => $product_name) {
+            $quantity          = $quantities[$index] ?? '';
+            $issue_type        = $issue_types[$index] ?? '';
+            $issue_description = $issue_descriptions[$index] ?? '';
+
+            if ($product_name === '' && $quantity === '' && $issue_type === '' && $issue_description === '') {
+                continue;
+            }
+
+            if ($product_name === '' || $quantity === '' || $issue_type === '' || $issue_description === '') {
+                $validation_error = __('لطفاً تمام فیلدهای هر ردیف مشکل را تکمیل کنید.', 'simple-ticket');
+                break;
+            }
+
+            if ((int) $quantity <= 0) {
+                $validation_error = __('تعداد کالا باید بزرگ‌تر از صفر باشد.', 'simple-ticket');
+                break;
+            }
+
+            $issue_items[$index] = array(
+                'product_name'      => $product_name,
+                'quantity'          => $quantity,
+                'issue_type'        => $issue_type,
+                'issue_description' => $issue_description,
+                'attachment'        => '',
+            );
+
+            if (!empty($attachments['name'][$index])) {
+                $file = array(
+                    'name'     => $attachments['name'][$index],
+                    'type'     => $attachments['type'][$index],
+                    'tmp_name' => $attachments['tmp_name'][$index],
+                    'error'    => $attachments['error'][$index],
+                    'size'     => $attachments['size'][$index],
+                );
+
+                if (!empty($file['error'])) {
+                    $validation_error = __('بارگذاری فایل با خطا مواجه شد.', 'simple-ticket');
+                    break;
+                }
+
+                if ($file['size'] > 10 * 1024 * 1024) {
+                    $validation_error = __('حجم فایل ضمیمه نباید بیش از ۱۰ مگابایت باشد.', 'simple-ticket');
+                    break;
+                }
+
+                $filetype = wp_check_filetype_and_ext($file['tmp_name'], $file['name']);
+                if (empty($filetype['type']) || !in_array($filetype['type'], $allowed_file_types, true)) {
+                    $validation_error = __('تنها امکان بارگذاری فرمت‌های رایج تصویر وجود دارد.', 'simple-ticket');
+                    break;
+                }
+
+                $collected_files[$index] = $file;
+            }
+        }
+
+        if ($order_number === '') {
+            $validation_error = __('شماره سفارش یا فاکتور باید فقط شامل عدد باشد.', 'simple-ticket');
+        }
+
+        if ($validation_error || empty($issue_items)) {
+            if (sts_is_ticket_ajax_request()) {
+                wp_send_json_error(array('message' => $validation_error ?: __('لطفاً حداقل یک مشکل را وارد کنید.', 'simple-ticket')));
+            }
+
+            wp_redirect(add_query_arg('ticket_error', 'true', wp_get_referer()));
+            exit();
+        }
+
+        $last_ticket_number = (int) get_option('sts_last_ticket_number', 0);
+        $new_ticket_number  = sprintf('CSR%04d', $last_ticket_number + 1);
+        update_option('sts_last_ticket_number', $last_ticket_number + 1);
+
+        $ticket_id = wp_insert_post(array(
+            'post_type'   => 'ticket',
+            'post_title'  => $new_ticket_number,
+            'post_status' => 'publish',
+            'post_author' => get_current_user_id(),
+        ));
+
+        if ($ticket_id) {
+            update_post_meta($ticket_id, 'ticket_number', $new_ticket_number);
+            update_post_meta($ticket_id, 'order_number', $order_number);
+            update_post_meta($ticket_id, 'order_date', $order_date);
+            update_post_meta($ticket_id, 'ticket_status', 'new');
+            update_post_meta($ticket_id, 'user_id', get_current_user_id());
+            update_post_meta($ticket_id, 'issue_items', $issue_items);
+
+            $uploaded_attachments = array();
+            foreach ($issue_items as $index => &$item) {
+                if (isset($collected_files[$index])) {
+                    $file           = $collected_files[$index];
+                    $tmp_name       = $file['tmp_name'] ?? '';
+                    if ($tmp_name && isset($uploaded_attachments[$tmp_name])) {
+                        $item['attachment'] = $uploaded_attachments[$tmp_name];
+                        continue;
+                    }
+
+                    $GLOBALS['sts_current_ticket_id'] = $ticket_id;
+                    add_filter('upload_dir', 'sts_ticket_upload_dir');
+
+                    $uploaded = wp_handle_upload($file, array('test_form' => false));
+
+                    remove_filter('upload_dir', 'sts_ticket_upload_dir');
+                    unset($GLOBALS['sts_current_ticket_id']);
+
+                    if (!empty($uploaded['url'])) {
+                        $item['attachment'] = $uploaded['url'];
+                        if ($tmp_name) {
+                            $uploaded_attachments[$tmp_name] = $uploaded['url'];
+                        }
+                    }
+                }
+            }
+            unset($item);
+
+            update_post_meta($ticket_id, 'issue_items', $issue_items);
+
+            $compiled_description = array();
+            foreach ($issue_items as $item) {
+                $compiled_description[] = sprintf(
+                    __('%1$s (تعداد: %2$s) - %3$s: %4$s', 'simple-ticket'),
+                    $item['product_name'],
+                    $item['quantity'],
+                    $item['issue_type'],
+                    $item['issue_description']
+                );
+            }
+            $compiled_description_text = implode("\n", $compiled_description);
+            update_post_meta($ticket_id, 'issue_description', $compiled_description_text);
+            $message = sts_build_ticket_notification_message($ticket_id, array(
+                'type'   => 'new_ticket',
+                'status' => __('جدید', 'simple-ticket'),
+            ));
+            sts_send_ticket_notification($ticket_id, $message);
+
+            if (sts_is_ticket_ajax_request()) {
+                wp_send_json_success(
+                    array(
+                        'message'       => 'درخواست با موفقیت ثبت شد',
+                        'ticket_number' => $new_ticket_number,
+                        'redirect_url'  => 'https://dede.ir/ticket-ok/',
+                    )
+                );
+            } else {
+                wp_redirect('https://dede.ir/ticket-ok/');
+                exit();
+            }
+            return;
+        }
+
+        wp_redirect(add_query_arg('ticket_error', 'true', wp_get_referer()));
+        exit();
+    }
+
+    if (isset($_POST['user_response_nonce']) && wp_verify_nonce($_POST['user_response_nonce'], 'submit_user_response')) {
+        $ticket_id     = intval($_POST['ticket_id']);
+        $user_response = sanitize_textarea_field($_POST['user_response']);
+        if ($ticket_id && $user_response) {
+            $responses   = get_post_meta($ticket_id, 'responses', true) ?: array();
+            $responses[] = array(
+                'author'  => 'user',
+                'date'    => current_time('Y-m-d H:i:s'),
+                'message' => $user_response,
+            );
+            update_post_meta($ticket_id, 'responses', $responses);
+            update_post_meta($ticket_id, 'ticket_status', 'new');
+
+            $admin_email   = get_option('sts_admin_email', get_option('admin_email'));
+            $ticket_number = get_post_meta($ticket_id, 'ticket_number', true);
+            $message       = sts_build_ticket_notification_message($ticket_id, array(
+                'type'          => 'user_response',
+                'user_response' => $user_response,
+            ));
+            sts_send_ticket_notification($ticket_id, $message);
+
+            wp_redirect(add_query_arg('response_submitted', 'true', wp_get_referer()));
+            exit();
+        }
+    }
+}
+add_action('init', 'sts_handle_ticket_submission');
+add_action('wp_ajax_sts_submit_ticket', 'sts_handle_ticket_submission');
+add_action('wp_ajax_nopriv_sts_submit_ticket', 'sts_handle_ticket_submission');
+
+/**
+ * AJAX handler for fetching ticket responses.
+ */
+function sts_get_ticket_responses() {
+    if (!wp_verify_nonce($_POST['nonce'], 'submit_user_response')) {
+        wp_die('Security check failed');
+    }
+
+    $ticket_id = intval($_POST['ticket_id']);
+    $user_id   = get_current_user_id();
+
+    $ticket = get_post($ticket_id);
+    if (!$ticket || $ticket->post_author != $user_id) {
+        wp_die('Access denied');
+    }
+
+    $responses = get_post_meta($ticket_id, 'responses', true) ?: array();
+    $first     = get_user_meta($user_id, 'first_name', true);
+    $last      = get_user_meta($user_id, 'last_name', true);
+    $fullname  = trim($first . ' ' . $last);
+    if (empty($fullname)) {
+        $user     = get_userdata($user_id);
+        $fullname = $user->user_login;
+    }
+
+    wp_send_json_success(
+        array(
+            'responses'      => $responses,
+            'issue_description' => get_post_meta($ticket_id, 'issue_description', true),
+            'user_full_name' => $fullname,
+        )
+    );
+}
+add_action('wp_ajax_get_ticket_responses', 'sts_get_ticket_responses');
+add_action('wp_ajax_nopriv_get_ticket_responses', 'sts_get_ticket_responses');
+
+/**
+ * AJAX handler for fetching ticket details.
+ */
+function sts_get_ticket_details() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => __('دسترسی غیرمجاز.', 'simple-ticket')));
+    }
+
+    $ticket_id = isset($_POST['ticket_id']) ? intval($_POST['ticket_id']) : 0;
+    $nonce     = isset($_POST['nonce']) ? sanitize_text_field($_POST['nonce']) : '';
+
+    if (!$ticket_id || !wp_verify_nonce($nonce, 'get_ticket_details')) {
+        wp_send_json_error(array('message' => __('درخواست نامعتبر است.', 'simple-ticket')));
+    }
+
+    $ticket = get_post($ticket_id);
+    if (!$ticket || $ticket->post_type !== 'ticket') {
+        wp_send_json_error(array('message' => __('درخواست یافت نشد.', 'simple-ticket')));
+    }
+
+    $current_user_id = get_current_user_id();
+    if ((int) $ticket->post_author !== $current_user_id) {
+        wp_send_json_error(array('message' => __('دسترسی غیرمجاز.', 'simple-ticket')));
+    }
+
+    $issue_items = get_post_meta($ticket_id, 'issue_items', true) ?: array();
+    if (empty($issue_items)) {
+        $legacy_issue_type        = get_post_meta($ticket_id, 'issue_type', true);
+        $legacy_issue_description = get_post_meta($ticket_id, 'issue_description', true);
+        $legacy_attachment        = get_post_meta($ticket_id, 'attachment', true);
+
+        if ($legacy_issue_type || $legacy_issue_description || $legacy_attachment) {
+            $issue_items = array(
+                array(
+                    'product_name'      => '',
+                    'quantity'          => '',
+                    'issue_type'        => $legacy_issue_type,
+                    'issue_description' => $legacy_issue_description,
+                    'attachment'        => $legacy_attachment,
+                ),
+            );
+        }
+    }
+
+    $statuses = array(
+        'new'       => __('جدید', 'simple-ticket'),
+        'reviewed'  => __('بررسی شده', 'simple-ticket'),
+        'responded' => __('پاسخ داده شده', 'simple-ticket'),
+        'closed'    => __('بسته شده', 'simple-ticket'),
+    );
+
+    $user_id = $ticket->post_author;
+    $user    = get_userdata($user_id);
+    $first   = get_user_meta($user_id, 'first_name', true);
+    $last    = get_user_meta($user_id, 'last_name', true);
+    $full    = trim($first . ' ' . $last);
+    if (empty($full) && $user) {
+        $full = $user->user_login;
+    }
+
+    $details = array(
+        'ticket_number'     => get_post_meta($ticket_id, 'ticket_number', true),
+        'order_number'      => get_post_meta($ticket_id, 'order_number', true),
+        'order_date'        => get_post_meta($ticket_id, 'order_date', true),
+        'issue_description' => get_post_meta($ticket_id, 'issue_description', true),
+        'issue_items'       => $issue_items,
+        'responses'         => get_post_meta($ticket_id, 'responses', true) ?: array(),
+        'status'            => $statuses[get_post_meta($ticket_id, 'ticket_status', true)] ?? __('نامشخص', 'simple-ticket'),
+        'user_full_name'    => $full,
+    );
+
+    wp_send_json_success($details);
+}
+add_action('wp_ajax_get_ticket_details', 'sts_get_ticket_details');
+add_action('wp_ajax_nopriv_get_ticket_details', 'sts_get_ticket_details');
+
+function sts_add_ajax_url() {
+    ?>
+    <script type="text/javascript">
+        var ajaxurl = "<?php echo esc_url(admin_url('admin-ajax.php')); ?>";
+    </script>
+    <?php
+}
+add_action('wp_head', 'sts_add_ajax_url');
+
+/**
+ * Enqueue ticket assets.
+ */
+function sts_enqueue_assets() {
+    if (!sts_page_has_shortcode(array('ticket_form', 'ticket_list'))) {
+        return;
+    }
+
+    $styles_version = '1.0';
+    $scripts_version = '1.0';
+    $styles_path = STS_PLUGIN_DIR . 'assets/css/ticket-styles.css';
+    $scripts_path = STS_PLUGIN_DIR . 'assets/js/ticket-scripts.js';
+
+    if (file_exists($styles_path)) {
+        $styles_version = (string) filemtime($styles_path);
+    }
+
+    if (file_exists($scripts_path)) {
+        $scripts_version = (string) filemtime($scripts_path);
+    }
+
+    wp_enqueue_style('persian-datepicker', 'https://unpkg.com/persian-datepicker@latest/dist/css/persian-datepicker.min.css', array(), '1.0');
+    wp_enqueue_style('sts-styles', plugin_dir_url(STS_PLUGIN_FILE) . 'assets/css/ticket-styles.css', array(), $styles_version);
+    wp_enqueue_script('persian-datepicker', 'https://unpkg.com/persian-datepicker@latest/dist/js/persian-datepicker.min.js', array('jquery'), '1.0', true);
+    wp_enqueue_script('sts-scripts', plugin_dir_url(STS_PLUGIN_FILE) . 'assets/js/ticket-scripts.js', array('jquery', 'persian-datepicker'), $scripts_version, true);
+}
+add_action('wp_enqueue_scripts', 'sts_enqueue_assets');
+
+/**
+ * Ticket form shortcode.
+ */
+function sts_ticket_form_shortcode() {
+    ob_start();
+    include STS_PLUGIN_DIR . 'templates/ticket-form.php';
+    return '<div class="dede-aftersales dede-aftersales--ticket">' . ob_get_clean() . '</div>';
+}
+add_shortcode('ticket_form', 'sts_ticket_form_shortcode');
+
+function sts_ticket_list_shortcode() {
+    ob_start();
+    include STS_PLUGIN_DIR . 'templates/ticket-list.php';
+    return '<div class="dede-aftersales dede-aftersales--ticket">' . ob_get_clean() . '</div>';
+}
+add_shortcode('ticket_list', 'sts_ticket_list_shortcode');

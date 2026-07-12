@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.dede-aftersales .container {
+    @apply max-w-2xl mx-auto dir-rtl;
+}
+
+.dede-aftersales input,
+.dede-aftersales select,
+.dede-aftersales textarea {
+    @apply border border-gray-300 rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.dede-aftersales .warranty-section {
+    @apply border border-gray-200 rounded-lg p-4 space-y-4;
+}
+
+.dede-aftersales .warranty-section-title {
+    @apply text-base font-semibold text-gray-800;
+}
+
+.dede-aftersales .warranty-hologram-preview img {
+    @apply w-full max-w-xs rounded-md border border-gray-200;
+}
+
+.dede-aftersales .hologram-code-grid {
+    margin-top: 0.25rem;
+    display: grid;
+    grid-template-columns: repeat(6, 48px);
+    gap: 0.5rem;
+    justify-content: end;
+}
+
+.dede-aftersales .hologram-digit {
+    @apply text-center text-lg font-semibold rounded-md;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 2px solid #6b7280;
+    background-color: #fff;
+    box-sizing: border-box;
+    text-align: center;
+    padding-inline: 0;
+    line-height: 1;
+}
+
+.dede-aftersales .hologram-digit:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.dede-aftersales button:hover {
+    background-color: #2e3192 !important;
+}
+
+.dede-aftersales #warranty-success-popup {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50;
+}
+
+.dede-aftersales #warranty-success-popup > div {
+    @apply bg-green-600 text-white p-6 rounded-lg text-center;
+}
