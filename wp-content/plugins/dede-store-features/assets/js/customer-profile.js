@@ -28,10 +28,26 @@
     }
 
     function initAccountType(root) {
+        if (root.dataset.initialized === '1') {
+            return;
+        }
+        root.dataset.initialized = '1';
+
         const options = Array.from(root.querySelectorAll('[data-account-type]'));
         const submit = root.querySelector('.dede-account-type__submit');
         const error = root.querySelector('[data-account-type-error]');
-        let selected = '';
+        const mode = root.dataset.accountTypeMode || 'create';
+        const currentType = root.dataset.currentType || '';
+        const action = root.dataset.accountTypeAction || config.accountTypeAction || 'dede_store_select_account_type';
+        const checked = root.querySelector('input[type="radio"]:checked');
+        let selected = checked ? checked.value : '';
+
+        function syncSubmit() {
+            if (!submit) {
+                return;
+            }
+            submit.disabled = !selected || ('change' === mode && selected === currentType);
+        }
 
         options.forEach(function (option) {
             option.addEventListener('click', function () {
@@ -45,10 +61,17 @@
                         radio.checked = active;
                     }
                 });
-                submit.disabled = !selected;
-                error.textContent = '';
+                syncSubmit();
+                if (error) {
+                    error.textContent = '';
+                }
             });
         });
+
+        syncSubmit();
+        if (!submit) {
+            return;
+        }
 
         submit.addEventListener('click', function (event) {
             event.preventDefault();
@@ -59,12 +82,15 @@
 
             submit.disabled = true;
             submit.classList.add('is-loading');
-            error.textContent = '';
+            if (error) {
+                error.textContent = '';
+            }
 
             const data = new FormData();
-            data.append('action', config.accountTypeAction || 'dede_store_select_account_type');
+            data.append('action', action);
             data.append('nonce', config.accountTypeNonce || '');
             data.append('select_type', selected);
+            data.append('redirect_url', window.location.href);
 
             request(data).then(function (response) {
                 if (!response.success) {
@@ -72,8 +98,10 @@
                 }
                 window.location.replace(response.data?.redirect || '/my-account');
             }).catch(function (exception) {
-                error.textContent = exception.message || config.messages?.genericError;
-                submit.disabled = false;
+                if (error) {
+                    error.textContent = exception.message || config.messages?.genericError;
+                }
+                syncSubmit();
             }).finally(function () {
                 submit.classList.remove('is-loading');
             });
@@ -82,6 +110,10 @@
 
     function initProfile(root) {
         const form = root.querySelector('.dede-profile__form');
+        if (!form) {
+            return;
+        }
+
         const panels = Array.from(root.querySelectorAll('[data-step]'));
         const stepButtons = Array.from(root.querySelectorAll('[data-step-target]'));
         const next = root.querySelector('[data-next]');
@@ -93,7 +125,20 @@
         const message = root.querySelector('[data-form-message]');
         const sameAddress = form.elements.namedItem('same_as_billing');
         const shippingBlock = root.querySelector('[data-shipping-fields]');
+        const role = root.dataset.accountRole || 'personal';
+        const identifierLabel = root.dataset.identifierLabel || ('company' === role ? 'شناسه ملی' : 'کد ملی');
+        const sameAddressLabel = root.dataset.sameAddressLabel || 'همان آدرس اصلی';
+        const cityMapElement = root.querySelector('[data-dede-city-map]');
+        let citiesByState = {};
         let currentStep = Math.max(1, Math.min(3, Number(root.dataset.startStep || 1)));
+
+        if (cityMapElement) {
+            try {
+                citiesByState = JSON.parse(cityMapElement.textContent || '{}') || {};
+            } catch (exception) {
+                citiesByState = {};
+            }
+        }
 
         function field(name) {
             return form.elements.namedItem(name);
@@ -134,10 +179,7 @@
                     holder.textContent = errors[name];
                 }
                 if (input) {
-                    const wrapper = input.closest('.dede-field');
-                    if (wrapper) {
-                        wrapper.classList.add('has-error');
-                    }
+                    input.closest('.dede-field')?.classList.add('has-error');
                     if (!first) {
                         first = input;
                     }
@@ -185,12 +227,12 @@
             const store = value('store_name');
             const fullName = [value('first_name'), value('last_name')].filter(Boolean).join(' ');
             const identity = company || (store ? store + (fullName ? ' — ' + fullName : '') : fullName);
-            const identifier = value('national_id') || value('national_code');
+            const identifier = 'company' === role ? value('national_id') : value('national_code');
             const billing = [selectedText('billing_state'), selectedText('billing_city'), value('billing_address_1')].filter(function (item) {
                 return item && item.indexOf('انتخاب') !== 0;
             }).join('، ');
             const shipping = sameAddress?.checked
-                ? 'همان آدرس اصلی'
+                ? sameAddressLabel
                 : [selectedText('shipping_state'), selectedText('shipping_city'), value('shipping_address_1')].filter(function (item) {
                     return item && item.indexOf('انتخاب') !== 0;
                 }).join('، ');
@@ -200,7 +242,7 @@
             const billingNode = root.querySelector('[data-review="billing"]');
             const shippingNode = root.querySelector('[data-review="shipping"]');
             if (identityNode) identityNode.textContent = identity || '—';
-            if (identifierNode) identifierNode.textContent = identifier ? 'شناسه: ' + identifier : '';
+            if (identifierNode) identifierNode.textContent = identifier ? identifierLabel + ': ' + identifier : '';
             if (billingNode) billingNode.textContent = billing || '—';
             if (shippingNode) shippingNode.textContent = shipping || '—';
         }
@@ -217,9 +259,9 @@
                 button.setAttribute('aria-current', target === currentStep ? 'step' : 'false');
             });
 
-            previous.hidden = currentStep === 1;
-            next.hidden = currentStep === 3;
-            submit.hidden = currentStep !== 3;
+            if (previous) previous.hidden = currentStep === 1;
+            if (next) next.hidden = currentStep === 3;
+            if (submit) submit.hidden = currentStep !== 3;
 
             const titles = {1: 'مشخصات', 2: 'آدرس', 3: 'تأیید'};
             if (mobileStep) mobileStep.textContent = 'مرحله ' + currentStep + ' از ۳';
@@ -237,12 +279,36 @@
             });
         }
 
+        function fillCities(citySelect, cities, currentValue) {
+            citySelect.innerHTML = '<option value="">انتخاب شهر</option>';
+            (cities || []).forEach(function (city) {
+                const option = document.createElement('option');
+                option.value = city.id;
+                option.textContent = city.name;
+                option.selected = String(currentValue || '') === String(city.id);
+                citySelect.appendChild(option);
+            });
+        }
+
         function loadCities(scope, state, currentValue) {
             const citySelect = root.querySelector('[data-city-select="' + scope + '"]');
-            if (!citySelect) return;
-            citySelect.disabled = true;
-            citySelect.innerHTML = '<option value="">' + (config.messages?.loadingCities || 'در حال دریافت شهرها…') + '</option>';
+            if (!citySelect) {
+                return;
+            }
 
+            if (!state) {
+                fillCities(citySelect, [], '');
+                return;
+            }
+
+            if (Object.prototype.hasOwnProperty.call(citiesByState, state)) {
+                fillCities(citySelect, citiesByState[state], currentValue);
+                citySelect.disabled = Boolean(sameAddress?.checked && scope === 'shipping');
+                return;
+            }
+
+            citySelect.disabled = true;
+            fillCities(citySelect, [], '');
             const data = new FormData();
             data.append('action', config.citiesAction || 'dede_store_get_cities');
             data.append('nonce', config.profileNonce || '');
@@ -252,16 +318,11 @@
                 if (!response.success) {
                     throw new Error(response.data?.message || config.messages?.genericError);
                 }
-                citySelect.innerHTML = '<option value="">انتخاب شهر</option>';
-                (response.data?.cities || []).forEach(function (city) {
-                    const option = document.createElement('option');
-                    option.value = city.id;
-                    option.textContent = city.name;
-                    option.selected = String(currentValue || '') === String(city.id);
-                    citySelect.appendChild(option);
-                });
+                const cities = response.data?.cities || [];
+                citiesByState[state] = cities;
+                fillCities(citySelect, cities, currentValue);
             }).catch(function () {
-                citySelect.innerHTML = '<option value="">دریافت شهرها ناموفق بود</option>';
+                citySelect.innerHTML = '<option value="">دریافت فهرست شهرها ناموفق بود</option>';
             }).finally(function () {
                 if (!(sameAddress?.checked && scope === 'shipping')) {
                     citySelect.disabled = false;
@@ -275,16 +336,19 @@
             });
         });
 
-        sameAddress?.addEventListener('change', toggleShipping);
+        sameAddress?.addEventListener('change', function () {
+            toggleShipping();
+            updateReview();
+        });
 
-        next.addEventListener('click', function () {
+        next?.addEventListener('click', function () {
             if (panelIsValid(currentStep)) {
                 setStep(currentStep + 1);
                 root.scrollIntoView({behavior: 'smooth', block: 'start'});
             }
         });
 
-        previous.addEventListener('click', function () {
+        previous?.addEventListener('click', function () {
             setStep(currentStep - 1);
             root.scrollIntoView({behavior: 'smooth', block: 'start'});
         });
@@ -298,9 +362,46 @@
             });
         });
 
+        const modal = root.querySelector('[data-account-type-modal]');
+        function openAccountTypeModal() {
+            if (!modal) {
+                return;
+            }
+            modal.hidden = false;
+            document.documentElement.classList.add('dede-modal-open');
+            modal.querySelector('[data-account-type]')?.querySelector('[data-account-type]')?.focus();
+        }
+        function closeAccountTypeModal() {
+            if (!modal) {
+                return;
+            }
+            modal.hidden = true;
+            document.documentElement.classList.remove('dede-modal-open');
+        }
+
+        root.querySelectorAll('[data-open-account-type]').forEach(function (button) {
+            button.addEventListener('click', openAccountTypeModal);
+        });
+        modal?.querySelectorAll('[data-close-account-type]').forEach(function (button) {
+            button.addEventListener('click', closeAccountTypeModal);
+        });
+        modal?.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                closeAccountTypeModal();
+            }
+        });
+        document.addEventListener('keydown', function (event) {
+            if ('Escape' === event.key && modal && !modal.hidden) {
+                closeAccountTypeModal();
+            }
+        });
+
         form.addEventListener('submit', function (event) {
             event.preventDefault();
             clearErrors();
+            if (!submit) {
+                return;
+            }
             submit.disabled = true;
             submit.classList.add('is-loading');
 
