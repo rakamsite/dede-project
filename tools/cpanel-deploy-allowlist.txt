@@ -5,3 +5,4 @@ wp-content/plugins/DeDeV2/
 wp-content/plugins/dede-core/
 wp-content/plugins/dede-product-operations/
 wp-content/plugins/dede-store-features/
+wp-content/plugins/dedeaftersales/
