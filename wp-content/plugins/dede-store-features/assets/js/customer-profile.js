@@ -19,6 +19,14 @@
         });
     }
 
+    function installLegacyAccountType() {
+        const legacy = document.querySelector('#AfterSuccessRegister');
+        if (!legacy || !config.accountTypeHtml || legacy.querySelector('[data-dede-account-type]')) {
+            return;
+        }
+        legacy.innerHTML = config.accountTypeHtml;
+    }
+
     function initAccountType(root) {
         const options = Array.from(root.querySelectorAll('[data-account-type]'));
         const submit = root.querySelector('.dede-account-type__submit');
@@ -42,7 +50,9 @@
             });
         });
 
-        submit.addEventListener('click', function () {
+        submit.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
             if (!selected || submit.disabled) {
                 return;
             }
@@ -337,6 +347,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        installLegacyAccountType();
         document.querySelectorAll('[data-dede-account-type]').forEach(initAccountType);
         document.querySelectorAll('[data-dede-profile]').forEach(initProfile);
     });
