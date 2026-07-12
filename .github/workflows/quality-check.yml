@@ -33,6 +33,8 @@ jobs:
           set -Eeuo pipefail
           find wp-content/plugins/dede-store-features -type f -name '*.php' -print0 \
             | xargs -0 -r -n 1 php -l
+          find wp-content/plugins/dedeaftersales -type f -name '*.php' -print0 \
+            | xargs -0 -r -n 1 php -l
           php -l wp-content/themes/DeDeTemPlate/woocommerce/myaccount/my-account.php
           php -l wp-content/themes/DeDeTemPlate/woocommerce/checkout/form-checkout.php
 
@@ -42,6 +44,17 @@ jobs:
           set -Eeuo pipefail
           node --check wp-content/plugins/dede-store-features/assets/js/customer-profile.js
           node --check wp-content/plugins/dede-store-features/assets/js/customer-profile-guard.js
+          find wp-content/plugins/dedeaftersales/assets/js -type f -name '*.js' -print0 \
+            | xargs -0 -r -n 1 node --check
+
+      - name: Check after-sales CSS scope
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if grep -RInE '^[[:space:]]*(button|input|select|textarea|table|th|td|tr)([[:space:]:,{.#\[])|^[[:space:]]*\.container[[:space:]]*\{' wp-content/plugins/dedeaftersales/assets/css; then
+            echo 'Unscoped global selector found in dedeaftersales CSS.' >&2
+            exit 1
+          fi
 
       - name: Check cPanel deploy script syntax
         shell: bash
