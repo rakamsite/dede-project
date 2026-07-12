@@ -95,7 +95,14 @@ class DeDe_Store_Features_Account_Type
 
     public function ajax_select()
     {
-        check_ajax_referer('dede_store_account_type', 'nonce');
+        if (is_user_logged_in()) {
+            check_ajax_referer('dede_store_account_type', 'nonce');
+        } elseif (!$this->resolve_token_user_id()) {
+            wp_send_json_error(array(
+                'message' => 'اعتبار مرحله ثبت‌نام منقضی شده است. با همان شماره و رمز وارد حساب خود شوید.',
+            ), 403);
+        }
+
         $this->complete_selection(false);
     }
 
@@ -117,7 +124,9 @@ class DeDe_Store_Features_Account_Type
 
         $user_id = $this->resolve_pending_user_id();
         if (!$user_id) {
-            wp_send_json_error(array('message' => 'اعتبار مرحله ثبت‌نام منقضی شده است. ثبت‌نام را دوباره انجام دهید.'), 403);
+            wp_send_json_error(array(
+                'message' => 'اعتبار مرحله ثبت‌نام منقضی شده است. با همان شماره و رمز وارد حساب خود شوید.',
+            ), 403);
         }
 
         $user = get_userdata($user_id);
@@ -162,14 +171,21 @@ class DeDe_Store_Features_Account_Type
         ));
     }
 
-    private function resolve_pending_user_id()
+    private function resolve_token_user_id()
     {
         $token = sanitize_text_field(wp_unslash($_COOKIE[self::TOKEN_COOKIE] ?? ''));
-        if ($token) {
-            $user_id = absint(get_transient(self::TOKEN_PREFIX . $token));
-            if ($user_id) {
-                return $user_id;
-            }
+        if (!$token) {
+            return 0;
+        }
+
+        return absint(get_transient(self::TOKEN_PREFIX . $token));
+    }
+
+    private function resolve_pending_user_id()
+    {
+        $user_id = $this->resolve_token_user_id();
+        if ($user_id) {
+            return $user_id;
         }
 
         if (is_user_logged_in()) {
@@ -193,10 +209,14 @@ class DeDe_Store_Features_Account_Type
 
     private function clear_registration_cookies()
     {
-        $path = defined('COOKIEPATH') && COOKIEPATH ? COOKIEPATH : '/';
+        $default_path = defined('COOKIEPATH') && COOKIEPATH ? COOKIEPATH : '/';
         $domain = defined('COOKIE_DOMAIN') ? COOKIE_DOMAIN : '';
+        $paths = array_unique(array($default_path, '/', '/wp-admin', '/wp-admin/'));
+
         foreach (array('register_User_password', 'register_User_username', 'User_ID_dede', 'TempPassSend') as $name) {
-            setcookie($name, '', time() - HOUR_IN_SECONDS, $path, $domain, is_ssl(), true);
+            foreach ($paths as $path) {
+                setcookie($name, '', time() - HOUR_IN_SECONDS, $path, $domain, is_ssl(), true);
+            }
         }
     }
 
@@ -219,9 +239,19 @@ class DeDe_Store_Features_Account_Type
         }
     }
 
+    private function normalize_digits($value)
+    {
+        return strtr((string) $value, array(
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+        ));
+    }
+
     private function normalize_mobile($value)
     {
-        $digits = preg_replace('/\D+/', '', (string) $value);
+        $digits = preg_replace('/\D+/', '', $this->normalize_digits($value));
         if (0 === strpos($digits, '0098')) {
             $digits = substr($digits, 2);
         }

@@ -1,0 +1,50 @@
+name: Quality check
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    name: PHP, JavaScript and deploy script checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Ensure PHP CLI is available
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if ! command -v php >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y php-cli
+          fi
+          php --version
+
+      - name: Check PHP syntax
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          find wp-content/plugins/dede-store-features -type f -name '*.php' -print0 \
+            | xargs -0 -r -n 1 php -l
+          php -l wp-content/themes/DeDeTemPlate/woocommerce/myaccount/my-account.php
+          php -l wp-content/themes/DeDeTemPlate/woocommerce/checkout/form-checkout.php
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check wp-content/plugins/dede-store-features/assets/js/customer-profile.js
+          node --check wp-content/plugins/dede-store-features/assets/js/customer-profile-guard.js
+
+      - name: Check cPanel deploy script syntax
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash -n tools/cpanel-deploy.sh

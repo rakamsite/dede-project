@@ -16,4 +16,5 @@ wp-content/plugins/dede-store-features/includes/class-dede-store-features-profil
 wp-content/plugins/dede-store-features/templates/account-type-selector.php
 wp-content/plugins/dede-store-features/templates/customer-profile.php
 wp-content/plugins/dede-store-features/assets/js/customer-profile.js
+wp-content/plugins/dede-store-features/assets/js/customer-profile-guard.js
 wp-content/plugins/dede-store-features/assets/css/customer-profile.css
