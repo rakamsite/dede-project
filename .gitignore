@@ -62,6 +62,9 @@
 !/wp-content/plugins/DeDeV2/
 !/wp-content/plugins/DeDeV2/**
 
+!/wp-content/plugins/dedeaftersales/
+!/wp-content/plugins/dedeaftersales/**
+
 # Future clean DeDe plugins
 !/wp-content/plugins/dede-*/
 !/wp-content/plugins/dede-*/**
