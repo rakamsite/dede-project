@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DeDe Store Features
  * Description: قابلیت‌های مشتری و فروشگاه DeDe شامل نوع حساب، پروفایل مشتری و کنترل اطلاعات Checkout.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: DeDe
  * Text Domain: dede-store-features
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('DEDE_STORE_FEATURES_VERSION', '1.0.0');
+define('DEDE_STORE_FEATURES_VERSION', '1.0.1');
 define('DEDE_STORE_FEATURES_FILE', __FILE__);
 define('DEDE_STORE_FEATURES_PATH', plugin_dir_path(__FILE__));
 define('DEDE_STORE_FEATURES_URL', plugin_dir_url(__FILE__));
