@@ -56,6 +56,12 @@ jobs:
           set -Eeuo pipefail
           php tools/tests/contact-validation.php
 
+      - name: Test profile rules
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          php tools/tests/profile-rules.php
+
       - name: Check JavaScript syntax
         shell: bash
         run: |

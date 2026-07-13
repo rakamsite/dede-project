@@ -1,19 +1,14 @@
-.dede-profile__optional summary > span:first-child::before,
+.dede-profile__optional summary > span::before,
 .dede-profile__optional summary > .dede-profile__optional-meta::before {
     content: none !important;
     display: none !important;
 }
 
-.dede-profile__optional summary > span:first-child {
-    display: inline-flex;
-    align-items: center;
-}
-
-.dede-profile__optional-meta {
+.dede-profile__optional-title {
     display: inline-flex !important;
     align-items: center;
-    gap: 8px;
-    margin-right: auto;
+    gap: 7px;
+    min-width: 0;
 }
 
 .dede-profile__optional-toggle {
@@ -42,6 +37,10 @@
     transform: translateY(-1px);
 }
 
+.dede-profile__optional summary > small {
+    margin-right: auto;
+}
+
 .dede-profile__optional-contact-row {
     grid-column: 1 / -1;
     display: grid;
@@ -51,89 +50,172 @@
     min-width: 0;
 }
 
+.dede-profile__optional-contact-row > * {
+    width: 100%;
+    min-width: 0;
+}
+
 .dede-profile__optional-contact-row .dede-birthday,
 .dede-profile__optional-contact-row .dede-field--wide {
     grid-column: auto;
 }
 
-.dede-landline {
-    display: grid;
-    grid-template-columns: minmax(105px, .34fr) minmax(150px, 1fr);
-    gap: 8px;
-    direction: rtl;
+.dede-profile__optional-contact-row .dede-field,
+.dede-profile__optional-contact-row .dede-birthday {
+    gap: 4px;
 }
 
-.dede-landline__part {
+.dede-profile__optional-contact-row .dede-birthday {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    width: 100%;
     min-width: 0;
 }
 
-.dede-landline__part > span {
-    color: #6b7280;
-    font-size: 10px;
-    font-weight: 600;
+.dede-profile__optional-contact-row .dede-birthday legend {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    line-height: 1.45;
 }
 
-.dede-landline__part input {
-    direction: ltr;
-    text-align: left;
+.dede-profile__optional-contact-row .dede-birthday__control,
+.dede-profile__optional-contact-row .dede-birthday__trigger,
+.dede-profile__optional-contact-row .dede-birthday__fallback {
+    width: 100% !important;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
-.dede-landline__area-input {
-    display: flex;
-    align-items: stretch;
-    direction: ltr;
+.dede-profile__optional-contact-row .dede-birthday__trigger {
     min-height: 40px;
+}
+
+.dede-landline {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 40px;
+    direction: ltr;
+    overflow: hidden;
     border: 1px solid #cfd4dd;
     border-radius: 9px;
-    overflow: hidden;
     background: #fff;
     transition: border-color .18s, box-shadow .18s;
+    cursor: text;
+    box-sizing: border-box;
 }
 
-.dede-landline__area-input:focus-within {
+.dede-landline:focus-within {
     border-color: #2f2483;
     box-shadow: 0 0 0 3px rgba(47, 36, 131, .09);
 }
 
-.dede-landline__area-input b {
+.dede-field.has-error .dede-landline {
+    border-color: #d92d3a;
+}
+
+.dede-landline__hint {
+    flex: 0 0 auto;
+    padding: 0 7px 0 10px;
+    color: #8a9099;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.dede-landline__zero {
     display: grid;
     place-items: center;
-    width: 34px;
-    flex: 0 0 34px;
-    margin: 0;
+    align-self: stretch;
+    width: 28px;
+    flex: 0 0 28px;
     background: #eef0f5;
-    color: #59606a;
-    font-size: 14px;
+    color: #8a9099;
+    font-size: 18px;
     font-weight: 800;
 }
 
-.dede-landline__area-input input {
-    min-width: 0;
+.dede-landline input {
     min-height: 38px !important;
-    padding: 8px 7px !important;
+    margin: 0 !important;
+    padding: 8px 4px !important;
     border: 0 !important;
     border-radius: 0 !important;
-    box-shadow: none !important;
     background: #fff !important;
+    color: #20242b !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    direction: ltr;
+    text-align: left;
+    font: inherit;
+    box-sizing: border-box;
 }
 
-.dede-landline__part > small {
+.dede-landline__area {
+    width: 38px !important;
+    flex: 0 0 38px;
+    text-align: center !important;
+    font-size: 18px !important;
+    font-weight: 700;
+}
+
+.dede-landline__separator {
+    flex: 0 0 auto;
+    color: #2d3339;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.dede-landline__number {
+    width: auto !important;
+    min-width: 70px !important;
+    flex: 1 1 auto;
+    padding-left: 8px !important;
+    font-size: 16px !important;
+}
+
+.dede-landline__messages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
     min-height: 12px;
+}
+
+.dede-landline__error {
+    min-height: 0 !important;
     color: #c62835;
     font-size: 10px;
     line-height: 1.25;
 }
 
-.dede-field.has-error .dede-landline__area-input,
-.dede-landline__part input:invalid:not(:placeholder-shown) {
-    border-color: #d92d3a;
+.dede-field > small[data-error-for$='_phone'] {
+    min-height: 0;
 }
 
 .dede-field input[readonly][dir='ltr'] {
     text-align: left;
+}
+
+.dede-profile__account-type.dede-account-type-change-locked,
+.dede-profile__account-type.dede-account-type-change-locked:hover,
+.dede-profile__account-type.dede-account-type-change-locked:focus {
+    background: #eaf8f0 !important;
+    color: #166534 !important;
+    cursor: default !important;
+    pointer-events: none;
+    opacity: 1;
+}
+
+.dede-profile--account-type-locked .dede-review [data-open-account-type],
+.dede-profile--account-type-locked .dede-review [data-open-account-type][hidden] {
+    display: none !important;
+}
+
+.dede-account-type--personal-store-only .dede-account-type__options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 @media (max-width: 767px) {
@@ -142,8 +224,27 @@
         row-gap: 7px;
     }
 
-    .dede-landline {
-        grid-template-columns: minmax(96px, .36fr) minmax(145px, 1fr);
-        gap: 6px;
+    .dede-profile__optional-contact-row .dede-birthday {
+        grid-column: auto;
+    }
+
+    .dede-landline__hint {
+        padding-right: 6px;
+        padding-left: 7px;
+        font-size: 9px;
+    }
+
+    .dede-landline__zero {
+        width: 25px;
+        flex-basis: 25px;
+    }
+
+    .dede-landline__area {
+        width: 34px !important;
+        flex-basis: 34px;
+    }
+
+    .dede-account-type--personal-store-only .dede-account-type__options {
+        grid-template-columns: 1fr;
     }
 }

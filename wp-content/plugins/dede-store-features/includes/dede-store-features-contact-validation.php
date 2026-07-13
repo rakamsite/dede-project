@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/dede-store-features-profile-rules.php';
+
 /**
  * Convert Persian/Arabic digits to ASCII digits and remove other characters.
  */
