@@ -62,6 +62,26 @@ function dede_store_features_is_valid_postcode_value($postcode)
 }
 
 /**
+ * Count meaningful address words. Punctuation and repeated spaces do not count
+ * as words; Persian, Latin and numeric address tokens do.
+ */
+function dede_store_features_address_word_count($address)
+{
+    $address = trim((string) $address);
+    if ('' === $address) {
+        return 0;
+    }
+
+    $matched = preg_match_all('/[\p{L}\p{N}]+/u', $address, $words);
+    return false === $matched ? 0 : (int) $matched;
+}
+
+function dede_store_features_is_valid_address_value($address)
+{
+    return dede_store_features_address_word_count($address) >= 4;
+}
+
+/**
  * Current province-level Iranian landline area codes after nationwide
  * normalization. Numbers are stored with the leading zero.
  */
@@ -149,6 +169,7 @@ function dede_store_features_enqueue_contact_enhancements()
 
     $css_path = DEDE_STORE_FEATURES_PATH . 'assets/css/profile-contact-enhancements.css';
     $js_path = DEDE_STORE_FEATURES_PATH . 'assets/js/profile-contact-enhancements.js';
+    $address_js_path = DEDE_STORE_FEATURES_PATH . 'assets/js/address-four-word-validation.js';
 
     wp_enqueue_style(
         'dede-store-features-profile-contact-enhancements',
@@ -162,6 +183,14 @@ function dede_store_features_enqueue_contact_enhancements()
         DEDE_STORE_FEATURES_URL . 'assets/js/profile-contact-enhancements.js',
         array('dede-store-features-customer-profile'),
         file_exists($js_path) ? (string) filemtime($js_path) : DEDE_STORE_FEATURES_VERSION,
+        true
+    );
+
+    wp_enqueue_script(
+        'dede-store-features-address-four-word-validation',
+        DEDE_STORE_FEATURES_URL . 'assets/js/address-four-word-validation.js',
+        array('dede-store-features-profile-contact-enhancements'),
+        file_exists($address_js_path) ? (string) filemtime($address_js_path) : DEDE_STORE_FEATURES_VERSION,
         true
     );
 }
