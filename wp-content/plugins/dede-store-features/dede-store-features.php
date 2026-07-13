@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DeDe Store Features
  * Description: قابلیت‌های مشتری و فروشگاه DeDe شامل نوع حساب، پروفایل مشتری و کنترل اطلاعات Checkout.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: DeDe
  * Text Domain: dede-store-features
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('DEDE_STORE_FEATURES_VERSION', '1.0.4');
+define('DEDE_STORE_FEATURES_VERSION', '1.0.5');
 define('DEDE_STORE_FEATURES_FILE', __FILE__);
 define('DEDE_STORE_FEATURES_PATH', plugin_dir_path(__FILE__));
 define('DEDE_STORE_FEATURES_URL', plugin_dir_url(__FILE__));
@@ -54,7 +54,7 @@ function dede_store_features_handle_legacy_account_type_request()
 }
 
 /**
- * Hotfix for the account-type change modal.
+ * Front-end compatibility and visual hardening for the customer profile.
  *
  * The theme's global modal styles can override the HTML hidden attribute. This
  * guard also forces change requests to use the authenticated change endpoint,
@@ -66,10 +66,62 @@ function dede_store_features_account_type_modal_hotfix()
         return;
     }
 
-    wp_add_inline_style(
-        'dede-store-features-customer-profile',
-        '.dede-account-type-modal[hidden]{display:none!important;}'
-    );
+    $style = <<<'CSS'
+.dede-account-type-modal[hidden] {
+    display: none !important;
+}
+
+.dede-profile__account-type {
+    background: #eaf8f0 !important;
+    color: #166534 !important;
+}
+
+.dede-profile__account-type:hover,
+.dede-profile__account-type:focus {
+    background: #dcf4e7 !important;
+    color: #166534 !important;
+}
+
+.dede-profile__account-type b {
+    color: #1d4ed8 !important;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+.dede-profile__account-type b::before {
+    content: '(';
+    text-decoration: none;
+}
+
+.dede-profile__account-type b::after {
+    content: ')';
+    text-decoration: none;
+}
+
+.dede-profile__optional summary > span::before {
+    content: '⌄' !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 18px !important;
+    height: 18px !important;
+    border: 0 !important;
+    font-family: Arial, sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    transform: rotate(0deg) !important;
+    transform-origin: center;
+    transition: transform .18s ease;
+}
+
+.dede-profile__optional[open] summary > span::before {
+    transform: rotate(180deg) !important;
+}
+CSS;
+
+    wp_add_inline_style('dede-store-features-customer-profile', $style);
 
     $script = <<<'JS'
 (function () {
