@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) {
 }
 
 require_once DEDE_STORE_FEATURES_PATH . 'includes/dede-store-features-birthday.php';
+require_once DEDE_STORE_FEATURES_PATH . 'includes/dede-store-features-contact-validation.php';
 
 /**
  * Normalize Persian/Arabic digits and remove non-digits.
