@@ -9,6 +9,7 @@ wp-content/plugins/DeDeV1/DeDeV1.php
 wp-content/plugins/DeDeV2/DeDeV2.php
 wp-content/plugins/dede-store-features/dede-store-features.php
 wp-content/plugins/dede-store-features/includes/dede-store-features-national-code-guard.php
+wp-content/plugins/dede-store-features/includes/dede-store-features-birthday.php
 wp-content/plugins/dede-store-features/includes/class-dede-store-features.php
 wp-content/plugins/dede-store-features/includes/class-dede-store-features-account-type.php
 wp-content/plugins/dede-store-features/includes/trait-dede-store-features-validation.php
@@ -18,7 +19,9 @@ wp-content/plugins/dede-store-features/templates/account-type-selector.php
 wp-content/plugins/dede-store-features/templates/customer-profile.php
 wp-content/plugins/dede-store-features/assets/js/customer-profile.js
 wp-content/plugins/dede-store-features/assets/js/customer-profile-guard.js
+wp-content/plugins/dede-store-features/assets/js/birthday-picker.js
 wp-content/plugins/dede-store-features/assets/css/customer-profile.css
+wp-content/plugins/dede-store-features/assets/css/birthday-picker.css
 wp-content/plugins/dedeaftersales/simple-ticket-system.php
 wp-content/plugins/dedeaftersales/includes/tickets.php
 wp-content/plugins/dedeaftersales/includes/warranty.php
