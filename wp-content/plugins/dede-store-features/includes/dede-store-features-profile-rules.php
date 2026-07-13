@@ -64,10 +64,10 @@ function dede_store_features_guard_account_type_transition()
 }
 
 /**
- * Keep a hidden compatibility national-code field in sync for company users.
- * The canonical company identifier remains national_id.
+ * The hidden compatibility field contains the 11-digit company national ID.
+ * Temporarily clear it before the legacy 10-digit national-code guard runs.
  */
-function dede_store_features_sync_company_national_code_request()
+function dede_store_features_suspend_company_national_code_guard()
 {
     if (!is_user_logged_in()) {
         return;
@@ -79,6 +79,21 @@ function dede_store_features_sync_company_national_code_request()
     }
 
     $national_id = wp_unslash($_POST['national_id'] ?? '');
+    if ('' === trim((string) $national_id)) {
+        return;
+    }
+
+    $GLOBALS['dede_store_company_national_id_request'] = $national_id;
+    $_POST['national_code'] = '';
+}
+
+/**
+ * Restore the compatibility field after the national-code guard and before the
+ * normal profile validation/save callback.
+ */
+function dede_store_features_restore_company_national_code_request()
+{
+    $national_id = $GLOBALS['dede_store_company_national_id_request'] ?? '';
     if ('' !== trim((string) $national_id)) {
         $_POST['national_code'] = $national_id;
     }
@@ -120,7 +135,8 @@ function dede_store_features_backfill_company_national_code()
 
 if (function_exists('add_action')) {
     add_action('wp_ajax_dede_store_change_account_type', 'dede_store_features_guard_account_type_transition', 0);
-    add_action('wp_ajax_dede_store_save_profile', 'dede_store_features_sync_company_national_code_request', 0);
+    add_action('wp_ajax_dede_store_save_profile', 'dede_store_features_suspend_company_national_code_guard', -1);
+    add_action('wp_ajax_dede_store_save_profile', 'dede_store_features_restore_company_national_code_request', 1);
     add_action('dede_store_features_after_profile_save', 'dede_store_features_copy_company_national_id_meta', 20, 3);
     add_action('wp_loaded', 'dede_store_features_backfill_company_national_code', 25);
 }
