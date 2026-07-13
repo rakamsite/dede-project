@@ -7,6 +7,11 @@ function sanitize_key($value)
     return strtolower((string) preg_replace('/[^a-z0-9_\-]/i', '', (string) $value));
 }
 
+function absint($value)
+{
+    return abs((int) $value);
+}
+
 $updated_meta = array();
 function update_user_meta($user_id, $key, $value)
 {
