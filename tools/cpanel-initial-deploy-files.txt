@@ -11,6 +11,7 @@ wp-content/plugins/dede-store-features/dede-store-features.php
 wp-content/plugins/dede-store-features/includes/dede-store-features-national-code-guard.php
 wp-content/plugins/dede-store-features/includes/dede-store-features-birthday.php
 wp-content/plugins/dede-store-features/includes/dede-store-features-contact-validation.php
+wp-content/plugins/dede-store-features/includes/dede-store-features-profile-rules.php
 wp-content/plugins/dede-store-features/includes/class-dede-store-features.php
 wp-content/plugins/dede-store-features/includes/class-dede-store-features-account-type.php
 wp-content/plugins/dede-store-features/includes/trait-dede-store-features-validation.php
