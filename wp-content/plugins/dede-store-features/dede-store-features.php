@@ -2,7 +2,7 @@
 /**
  * Plugin Name: DeDe Store Features
  * Description: قابلیت‌های مشتری و فروشگاه DeDe شامل نوع حساب، پروفایل مشتری و کنترل اطلاعات Checkout.
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: DeDe
  * Text Domain: dede-store-features
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('DEDE_STORE_FEATURES_VERSION', '1.0.5');
+define('DEDE_STORE_FEATURES_VERSION', '1.0.6');
 define('DEDE_STORE_FEATURES_FILE', __FILE__);
 define('DEDE_STORE_FEATURES_PATH', plugin_dir_path(__FILE__));
 define('DEDE_STORE_FEATURES_URL', plugin_dir_url(__FILE__));
@@ -56,9 +56,9 @@ function dede_store_features_handle_legacy_account_type_request()
 /**
  * Front-end compatibility and visual hardening for the customer profile.
  *
- * The theme's global modal styles can override the HTML hidden attribute. This
- * guard also forces change requests to use the authenticated change endpoint,
- * even when an older cached copy of customer-profile.js is still in the browser.
+ * The theme's global modal and button styles can override component styles. This
+ * guard keeps the modal behavior stable and gives the profile controls explicit,
+ * scoped visual rules.
  */
 function dede_store_features_account_type_modal_hotfix()
 {
@@ -71,52 +71,69 @@ function dede_store_features_account_type_modal_hotfix()
     display: none !important;
 }
 
-.dede-profile__account-type {
+.dede-profile .dede-profile__account-type {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 8px 14px !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
     background: #eaf8f0 !important;
     color: #166534 !important;
+    line-height: 1.35 !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
 }
 
-.dede-profile__account-type:hover,
-.dede-profile__account-type:focus {
+.dede-profile .dede-profile__account-type:hover,
+.dede-profile .dede-profile__account-type:focus {
     background: #dcf4e7 !important;
     color: #166534 !important;
 }
 
-.dede-profile__account-type b {
+.dede-profile .dede-profile__account-type b {
     color: #1d4ed8 !important;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
+    font-size: inherit !important;
+    font-weight: 700 !important;
+    text-decoration: underline !important;
+    text-decoration-thickness: 1px !important;
+    text-underline-offset: 3px !important;
 }
 
-.dede-profile__account-type b::before {
+.dede-profile .dede-profile__account-type b::before {
     content: '(';
+    color: #166534;
     text-decoration: none;
 }
 
-.dede-profile__account-type b::after {
+.dede-profile .dede-profile__account-type b::after {
     content: ')';
+    color: #166534;
     text-decoration: none;
 }
 
-.dede-profile__optional summary > span::before {
-    content: '⌄' !important;
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 18px !important;
-    height: 18px !important;
+.dede-profile .dede-profile__optional summary > span::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 22px !important;
+    height: 22px !important;
+    flex: 0 0 22px !important;
     border: 0 !important;
-    font-family: Arial, sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1;
+    background-color: transparent !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 22px 22px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232f2483' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
     transform: rotate(0deg) !important;
-    transform-origin: center;
-    transition: transform .18s ease;
+    transform-origin: center !important;
+    transition: transform .18s ease !important;
 }
 
-.dede-profile__optional[open] summary > span::before {
+.dede-profile .dede-profile__optional[open] summary > span::before {
     transform: rotate(180deg) !important;
 }
 CSS;
