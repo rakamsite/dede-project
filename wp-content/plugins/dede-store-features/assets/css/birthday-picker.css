@@ -1,0 +1,168 @@
+.dede-birthday__control {
+    position: relative;
+    width: 100%;
+}
+
+.dede-birthday__trigger {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px;
+    width: 100% !important;
+    min-height: 42px;
+    padding: 8px 11px !important;
+    border: 1px solid #cfd4dd !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: #172033 !important;
+    font: inherit !important;
+    text-align: right;
+    cursor: pointer;
+    box-shadow: none !important;
+}
+
+.dede-birthday__trigger:hover,
+.dede-birthday__trigger:focus {
+    border-color: #2f2483 !important;
+    background: #fff !important;
+    color: #172033 !important;
+    box-shadow: 0 0 0 3px rgba(47, 36, 131, .09) !important;
+}
+
+.dede-birthday__trigger svg {
+    flex: 0 0 22px;
+    fill: none;
+    stroke: #2f2483;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.dede-birthday__popover[hidden] {
+    display: none !important;
+}
+
+.dede-birthday__popover {
+    position: absolute;
+    z-index: 90;
+    top: calc(100% + 7px);
+    right: 0;
+    width: min(350px, calc(100vw - 32px));
+    padding: 12px;
+    border: 1px solid #e1e5ec;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .16);
+}
+
+.dede-birthday__toolbar {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.dede-birthday__toolbar select {
+    min-height: 38px !important;
+    padding: 6px 9px !important;
+}
+
+.dede-birthday__weekdays,
+.dede-birthday__days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.dede-birthday__weekdays {
+    margin-bottom: 5px;
+    color: #697386;
+    font-size: 11px;
+    text-align: center;
+}
+
+.dede-birthday__weekdays span {
+    padding: 4px 0;
+}
+
+.dede-birthday__days button {
+    display: grid !important;
+    place-items: center;
+    aspect-ratio: 1;
+    min-width: 0;
+    min-height: 34px;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: #172033 !important;
+    font: inherit !important;
+    font-size: 12px !important;
+    cursor: pointer;
+    box-shadow: none !important;
+}
+
+.dede-birthday__days button:hover,
+.dede-birthday__days button:focus {
+    background: #eeecff !important;
+    color: #2f2483 !important;
+}
+
+.dede-birthday__days button.is-selected,
+.dede-birthday__days button.is-selected:hover,
+.dede-birthday__days button.is-selected:focus {
+    background: #2f2483 !important;
+    color: #fff !important;
+}
+
+.dede-birthday__days button:disabled {
+    background: transparent !important;
+    color: #c5c9d1 !important;
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+.dede-birthday__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 7px;
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid #e1e5ec;
+}
+
+.dede-birthday__footer button {
+    min-height: 34px;
+    padding: 6px 11px !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: #eeecff !important;
+    color: #2f2483 !important;
+    font: inherit !important;
+    font-size: 11px !important;
+    cursor: pointer;
+    box-shadow: none !important;
+}
+
+.dede-birthday__footer button:hover,
+.dede-birthday__footer button:focus {
+    background: #2f2483 !important;
+    color: #fff !important;
+}
+
+.dede-birthday.is-enhanced .dede-birthday__fallback {
+    display: none !important;
+}
+
+@media (max-width: 480px) {
+    .dede-birthday__popover {
+        position: fixed;
+        top: 50%;
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-height: calc(100dvh - 24px);
+        overflow-y: auto;
+        transform: translateY(-50%);
+    }
+}
