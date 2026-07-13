@@ -25,13 +25,21 @@ trait DeDe_Store_Features_Validation
             'billing_state' => sanitize_text_field($request['billing_state'] ?? ''),
             'billing_city' => absint($this->normalize_digits($request['billing_city'] ?? 0)),
             'billing_postcode' => $this->digits_only($request['billing_postcode'] ?? ''),
-            'billing_phone' => $this->digits_only($request['billing_phone'] ?? ''),
+            'billing_phone' => dede_store_features_normalize_landline_value(
+                $request['billing_phone'] ?? '',
+                $request['billing_phone_area'] ?? '',
+                $request['billing_phone_number'] ?? ''
+            ),
             'billing_address_1' => sanitize_textarea_field($request['billing_address_1'] ?? ''),
             'same_as_billing' => !empty($request['same_as_billing']),
             'shipping_state' => sanitize_text_field($request['shipping_state'] ?? ''),
             'shipping_city' => absint($this->normalize_digits($request['shipping_city'] ?? 0)),
             'shipping_postcode' => $this->digits_only($request['shipping_postcode'] ?? ''),
-            'shipping_phone' => $this->digits_only($request['shipping_phone'] ?? ''),
+            'shipping_phone' => dede_store_features_normalize_landline_value(
+                $request['shipping_phone'] ?? '',
+                $request['shipping_phone_area'] ?? '',
+                $request['shipping_phone_number'] ?? ''
+            ),
             'shipping_address_1' => sanitize_textarea_field($request['shipping_address_1'] ?? ''),
         );
 
@@ -130,11 +138,11 @@ trait DeDe_Store_Features_Validation
         if (!$city || !$this->city_belongs_to_state($city, $state)) {
             $errors[$prefix . '_city'] = 'انتخاب شهر معتبر الزامی است.';
         }
-        if (!preg_match('/^\d{10}$/', $postcode)) {
-            $errors[$prefix . '_postcode'] = 'کد پستی باید دقیقاً ۱۰ رقم باشد.';
+        if (!dede_store_features_is_valid_postcode_value($postcode)) {
+            $errors[$prefix . '_postcode'] = 'کد پستی باید ۱۰ رقم معتبر و غیرتکراری باشد.';
         }
-        if (!preg_match('/^\d{4,15}$/', $phone)) {
-            $errors[$prefix . '_phone'] = 'تلفن ثابت باید حداقل ۴ رقم باشد.';
+        if (!dede_store_features_is_valid_landline_value($phone)) {
+            $errors[$prefix . '_phone'] = 'کد شهر و شماره تلفن ثابت را صحیح وارد کنید.';
         }
         $length = function_exists('mb_strlen') ? mb_strlen($address, 'UTF-8') : strlen($address);
         if ($length < 5) {
@@ -196,6 +204,10 @@ trait DeDe_Store_Features_Validation
 
     public function is_valid_national_code($code)
     {
+        if (function_exists('dede_store_features_is_valid_national_code_value')) {
+            return dede_store_features_is_valid_national_code_value($code);
+        }
+
         $code = $this->digits_only($code);
         if (!preg_match('/^\d{10}$/', $code) || preg_match('/^(\d)\1{9}$/', $code)) {
             return false;
@@ -256,9 +268,9 @@ trait DeDe_Store_Features_Validation
         if (!$birth_date) {
             return new WP_Error('invalid_birthday', 'تاریخ تولد معتبر نیست.');
         }
-        $cutoff = current_datetime()->modify('-10 years')->setTime(0, 0, 0);
-        if ($birth_date >= $cutoff) {
-            return new WP_Error('under_age', 'سن کاربر باید بیشتر از ۱۰ سال باشد.');
+        $cutoff = current_datetime()->modify('-15 years')->setTime(0, 0, 0);
+        if ($birth_date > $cutoff) {
+            return new WP_Error('under_age', 'سن کاربر باید حداقل ۱۵ سال باشد.');
         }
         return array(
             'jalali' => sprintf('%04d/%02d/%02d', $year, $month, $day),
