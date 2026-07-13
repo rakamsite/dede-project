@@ -86,19 +86,36 @@
 
     function enhanceOptionalSection(root) {
         var details = root.querySelector('.dede-profile__optional');
-        var summary = details && details.querySelector('summary');
-        if (!summary || summary.querySelector('.dede-profile__optional-meta')) return;
+        if (!details) return;
 
-        var badge = summary.querySelector(':scope > small');
-        var meta = document.createElement('span');
-        meta.className = 'dede-profile__optional-meta';
-        if (badge) meta.appendChild(badge);
+        var summary = details.querySelector('summary');
+        if (summary && !summary.querySelector('.dede-profile__optional-meta')) {
+            var badge = summary.querySelector(':scope > small');
+            var meta = document.createElement('span');
+            meta.className = 'dede-profile__optional-meta';
+            if (badge) meta.appendChild(badge);
 
-        var toggle = document.createElement('i');
-        toggle.className = 'dede-profile__optional-toggle';
-        toggle.setAttribute('aria-hidden', 'true');
-        meta.appendChild(toggle);
-        summary.appendChild(meta);
+            var toggle = document.createElement('i');
+            toggle.className = 'dede-profile__optional-toggle';
+            toggle.setAttribute('aria-hidden', 'true');
+            meta.appendChild(toggle);
+            summary.appendChild(meta);
+        }
+
+        var grid = details.querySelector(':scope > .dede-profile__grid');
+        if (!grid || grid.querySelector('.dede-profile__optional-contact-row')) return;
+
+        var emailField = grid.querySelector('input[name="email"]')?.closest('.dede-field');
+        var telegramField = grid.querySelector('input[name="telegram"]')?.closest('.dede-field');
+        var birthdayField = grid.querySelector('.dede-birthday');
+        if (!emailField || !telegramField || !birthdayField) return;
+
+        var row = document.createElement('div');
+        row.className = 'dede-profile__optional-contact-row';
+        grid.insertBefore(row, emailField);
+        row.appendChild(emailField);
+        row.appendChild(telegramField);
+        row.appendChild(birthdayField);
     }
 
     function enhanceMobileDisplay(root) {
