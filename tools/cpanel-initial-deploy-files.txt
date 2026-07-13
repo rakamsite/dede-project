@@ -24,6 +24,7 @@ wp-content/plugins/dede-store-features/assets/js/customer-profile-guard.js
 wp-content/plugins/dede-store-features/assets/js/birthday-picker.js
 wp-content/plugins/dede-store-features/assets/js/profile-contact-enhancements.js
 wp-content/plugins/dede-store-features/assets/js/landline-minimum-five-digits.js
+wp-content/plugins/dede-store-features/assets/js/address-four-word-validation.js
 wp-content/plugins/dede-store-features/assets/css/customer-profile.css
 wp-content/plugins/dede-store-features/assets/css/birthday-picker.css
 wp-content/plugins/dede-store-features/assets/css/profile-contact-enhancements.css
