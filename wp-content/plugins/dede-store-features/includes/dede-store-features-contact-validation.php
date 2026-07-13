@@ -94,14 +94,42 @@ function dede_store_features_normalize_landline_value($legacy, $area, $number)
 function dede_store_features_is_valid_landline_value($phone)
 {
     $phone = dede_store_features_contact_digits($phone);
-    if (!preg_match('/^0\d{10}$/', $phone)) {
+    if (!preg_match('/^0\d{7,}$/', $phone)) {
         return false;
     }
 
     $area = substr($phone, 0, 3);
     $local = substr($phone, 3);
     return in_array($area, dede_store_features_landline_area_codes(), true)
+        && (bool) preg_match('/^\d{5,}$/', $local)
         && !dede_store_features_is_obvious_numeric_pattern($local);
+}
+
+/**
+ * Load a compatibility layer before the main profile enhancement script. It
+ * preserves legacy values and changes the local landline part to a minimum of
+ * five digits without imposing any maximum length.
+ */
+function dede_store_features_enqueue_landline_minimum_length_compat()
+{
+    if (is_admin()) {
+        return;
+    }
+
+    $is_account = function_exists('is_account_page') && is_account_page();
+    $is_checkout = function_exists('is_checkout') && is_checkout();
+    if (!$is_account && !$is_checkout) {
+        return;
+    }
+
+    $js_path = DEDE_STORE_FEATURES_PATH . 'assets/js/landline-minimum-five-digits.js';
+    wp_enqueue_script(
+        'dede-store-features-landline-minimum-five-digits',
+        DEDE_STORE_FEATURES_URL . 'assets/js/landline-minimum-five-digits.js',
+        array('dede-store-features-customer-profile'),
+        file_exists($js_path) ? (string) filemtime($js_path) : DEDE_STORE_FEATURES_VERSION,
+        true
+    );
 }
 
 /**
@@ -139,5 +167,6 @@ function dede_store_features_enqueue_contact_enhancements()
 }
 
 if (function_exists('add_action')) {
+    add_action('wp_enqueue_scripts', 'dede_store_features_enqueue_landline_minimum_length_compat', 139);
     add_action('wp_enqueue_scripts', 'dede_store_features_enqueue_contact_enhancements', 140);
 }

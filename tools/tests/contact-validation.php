@@ -32,9 +32,10 @@ foreach ($invalid_postcodes as $postcode) {
 }
 
 $valid_landlines = array(
+    '02148275',
+    '۰۶۱۳۲۵۴۷',
     '02144556677',
-    '۰۶۱۳۲۵۴۷۸۹۶',
-    '08338274561',
+    '083382745619876',
 );
 foreach ($valid_landlines as $phone) {
     if (!dede_store_features_is_valid_landline_value($phone)) {
@@ -44,9 +45,9 @@ foreach ($valid_landlines as $phone) {
 }
 
 $invalid_landlines = array(
-    '02111111111',
-    '02112345678',
-    '02187654321',
+    '0214827',
+    '02111111',
+    '02112345',
     '09944556677',
     '2144556677',
     '0611234',
@@ -58,8 +59,13 @@ foreach ($invalid_landlines as $phone) {
     }
 }
 
-if ('06132547896' !== dede_store_features_normalize_landline_value('', '61', '32547896')) {
-    fwrite(STDERR, "Split landline was not normalized to the legacy storage format.\n");
+if ('06132547' !== dede_store_features_normalize_landline_value('', '61', '32547')) {
+    fwrite(STDERR, "Five-digit landline was not normalized to the legacy storage format.\n");
+    exit(1);
+}
+
+if ('061325478963147' !== dede_store_features_normalize_landline_value('', '61', '325478963147')) {
+    fwrite(STDERR, "Long landline was unexpectedly truncated during normalization.\n");
     exit(1);
 }
 
