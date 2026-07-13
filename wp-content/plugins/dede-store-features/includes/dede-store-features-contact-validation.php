@@ -101,3 +101,41 @@ function dede_store_features_is_valid_landline_value($phone)
     return in_array($area, dede_store_features_landline_area_codes(), true)
         && !dede_store_features_is_obvious_numeric_pattern($local);
 }
+
+/**
+ * Load profile-only UI enhancements after the base profile assets.
+ */
+function dede_store_features_enqueue_contact_enhancements()
+{
+    if (is_admin()) {
+        return;
+    }
+
+    $is_account = function_exists('is_account_page') && is_account_page();
+    $is_checkout = function_exists('is_checkout') && is_checkout();
+    if (!$is_account && !$is_checkout) {
+        return;
+    }
+
+    $css_path = DEDE_STORE_FEATURES_PATH . 'assets/css/profile-contact-enhancements.css';
+    $js_path = DEDE_STORE_FEATURES_PATH . 'assets/js/profile-contact-enhancements.js';
+
+    wp_enqueue_style(
+        'dede-store-features-profile-contact-enhancements',
+        DEDE_STORE_FEATURES_URL . 'assets/css/profile-contact-enhancements.css',
+        array('dede-store-features-customer-profile'),
+        file_exists($css_path) ? (string) filemtime($css_path) : DEDE_STORE_FEATURES_VERSION
+    );
+
+    wp_enqueue_script(
+        'dede-store-features-profile-contact-enhancements',
+        DEDE_STORE_FEATURES_URL . 'assets/js/profile-contact-enhancements.js',
+        array('dede-store-features-customer-profile'),
+        file_exists($js_path) ? (string) filemtime($js_path) : DEDE_STORE_FEATURES_VERSION,
+        true
+    );
+}
+
+if (function_exists('add_action')) {
+    add_action('wp_enqueue_scripts', 'dede_store_features_enqueue_contact_enhancements', 140);
+}
