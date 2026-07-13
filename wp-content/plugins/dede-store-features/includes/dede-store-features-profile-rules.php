@@ -133,10 +133,68 @@ function dede_store_features_backfill_company_national_code()
     }
 }
 
+/**
+ * The base profile script can disable the original shipping fields before the
+ * split landline inputs are created. Mirror that initial state onto the newly
+ * created inputs so a collapsed shipping section never blocks progression.
+ */
+function dede_store_features_sync_initial_shipping_landline_state()
+{
+    if (is_admin()) {
+        return;
+    }
+
+    $is_account = function_exists('is_account_page') && is_account_page();
+    $is_checkout = function_exists('is_checkout') && is_checkout();
+    if (!$is_account && !$is_checkout) {
+        return;
+    }
+
+    $script = <<<'JS'
+(function () {
+    'use strict';
+
+    function init() {
+        document.querySelectorAll('[data-dede-profile]').forEach(function (root) {
+            var sameAddress = root.querySelector('[name="same_as_billing"]');
+            var shippingBlock = root.querySelector('[data-shipping-fields]');
+            if (!sameAddress || !shippingBlock) {
+                return;
+            }
+
+            function sync() {
+                var disabled = Boolean(sameAddress.checked);
+                shippingBlock.querySelectorAll('.dede-landline__area, .dede-landline__number').forEach(function (input) {
+                    input.disabled = disabled;
+                    if (!disabled && input.value) {
+                        input.dispatchEvent(new Event('input', {bubbles: true}));
+                    }
+                });
+            }
+
+            sameAddress.addEventListener('change', function () {
+                window.setTimeout(sync, 0);
+            });
+            sync();
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        window.setTimeout(init, 0);
+    }
+}());
+JS;
+
+    wp_add_inline_script('dede-store-features-profile-contact-enhancements', $script, 'after');
+}
+
 if (function_exists('add_action')) {
     add_action('wp_ajax_dede_store_change_account_type', 'dede_store_features_guard_account_type_transition', 0);
     add_action('wp_ajax_dede_store_save_profile', 'dede_store_features_suspend_company_national_code_guard', -1);
     add_action('wp_ajax_dede_store_save_profile', 'dede_store_features_restore_company_national_code_request', 1);
     add_action('dede_store_features_after_profile_save', 'dede_store_features_copy_company_national_id_meta', 20, 3);
     add_action('wp_loaded', 'dede_store_features_backfill_company_national_code', 25);
+    add_action('wp_enqueue_scripts', 'dede_store_features_sync_initial_shipping_landline_state', 145);
 }
