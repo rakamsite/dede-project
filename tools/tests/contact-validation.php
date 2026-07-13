@@ -31,6 +31,33 @@ foreach ($invalid_postcodes as $postcode) {
     }
 }
 
+$valid_addresses = array(
+    'خیابان آزادی کوچه بهار پلاک ۱۲',
+    'تهران میدان ونک خیابان ملاصدرا',
+    'Unit 12 Main Street Tehran',
+    'مشهد، بلوار سجاد، کوچه بهار، پلاک ۵',
+);
+foreach ($valid_addresses as $address) {
+    if (!dede_store_features_is_valid_address_value($address)) {
+        fwrite(STDERR, "Valid four-word address rejected: {$address}\n");
+        exit(1);
+    }
+}
+
+$invalid_addresses = array(
+    '',
+    'تهران',
+    'تهران خیابان آزادی',
+    'تهران، خیابان، آزادی',
+    '--- ...',
+);
+foreach ($invalid_addresses as $address) {
+    if (dede_store_features_is_valid_address_value($address)) {
+        fwrite(STDERR, "Short address accepted: {$address}\n");
+        exit(1);
+    }
+}
+
 $valid_landlines = array(
     '02148275',
     '۰۶۱۳۲۵۴۷',

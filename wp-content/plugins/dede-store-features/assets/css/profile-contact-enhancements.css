@@ -92,6 +92,52 @@
     min-height: 40px;
 }
 
+/* Fieldset and legend keep browser-specific intrinsic sizing unless fully reset. */
+.dede-profile__optional-contact-row > .dede-birthday {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto;
+    align-content: start;
+    align-self: stretch;
+    row-gap: 4px !important;
+    inline-size: 100% !important;
+    width: 100% !important;
+    max-inline-size: none !important;
+    max-width: none !important;
+    min-inline-size: 0 !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+}
+
+.dede-profile__optional-contact-row > .dede-birthday > legend {
+    float: none !important;
+    inline-size: 100% !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 0 4px !important;
+    padding: 0 !important;
+    line-height: 1.45;
+    box-sizing: border-box;
+}
+
+.dede-profile__optional-contact-row > .dede-birthday .dede-birthday__control,
+.dede-profile__optional-contact-row > .dede-birthday .dede-birthday__trigger,
+.dede-profile__optional-contact-row > .dede-birthday .dede-birthday__fallback {
+    display: block;
+    inline-size: 100% !important;
+    width: 100% !important;
+    max-inline-size: none !important;
+    max-width: none !important;
+    min-inline-size: 0 !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.dede-profile__optional-contact-row > .dede-birthday .dede-birthday__trigger {
+    display: flex !important;
+    flex: 1 1 auto !important;
+}
+
 .dede-landline {
     display: flex;
     align-items: center;
