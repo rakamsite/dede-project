@@ -144,9 +144,8 @@ trait DeDe_Store_Features_Validation
         if (!dede_store_features_is_valid_landline_value($phone)) {
             $errors[$prefix . '_phone'] = 'کد شهر و شماره تلفن ثابت را صحیح وارد کنید.';
         }
-        $length = function_exists('mb_strlen') ? mb_strlen($address, 'UTF-8') : strlen($address);
-        if ($length < 5) {
-            $errors[$prefix . '_address_1'] = 'آدرس کامل را وارد کنید.';
+        if (!dede_store_features_is_valid_address_value($address)) {
+            $errors[$prefix . '_address_1'] = 'آدرس خیلی کوتاه است.';
         }
     }
 
