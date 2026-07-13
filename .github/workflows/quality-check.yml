@@ -71,6 +71,7 @@ jobs:
           node --check wp-content/plugins/dede-store-features/assets/js/birthday-picker.js
           node --check wp-content/plugins/dede-store-features/assets/js/profile-contact-enhancements.js
           node --check wp-content/plugins/dede-store-features/assets/js/landline-minimum-five-digits.js
+          node --check wp-content/plugins/dede-store-features/assets/js/address-four-word-validation.js
           find wp-content/plugins/dedeaftersales/assets/js -type f -name '*.js' -print0 \
             | xargs -0 -r -n 1 node --check
 
