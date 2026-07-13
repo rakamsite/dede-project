@@ -1,7 +1,8 @@
 <?php
 
 define('ABSPATH', __DIR__ . '/');
-require dirname(__DIR__, 2) . '/wp-content/plugins/dede-store-features/includes/dede-store-features-national-code-guard.php';
+define('DEDE_STORE_FEATURES_PATH', dirname(__DIR__, 2) . '/wp-content/plugins/dede-store-features/');
+require DEDE_STORE_FEATURES_PATH . 'includes/dede-store-features-national-code-guard.php';
 
 $invalid_codes = array(
     '0123456789',
