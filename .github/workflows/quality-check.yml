@@ -44,12 +44,19 @@ jobs:
           set -Eeuo pipefail
           php tools/tests/national-code-validation.php
 
+      - name: Test birthday validation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          php tools/tests/birthday-validation.php
+
       - name: Check JavaScript syntax
         shell: bash
         run: |
           set -Eeuo pipefail
           node --check wp-content/plugins/dede-store-features/assets/js/customer-profile.js
           node --check wp-content/plugins/dede-store-features/assets/js/customer-profile-guard.js
+          node --check wp-content/plugins/dede-store-features/assets/js/birthday-picker.js
           find wp-content/plugins/dedeaftersales/assets/js -type f -name '*.js' -print0 \
             | xargs -0 -r -n 1 node --check
 
